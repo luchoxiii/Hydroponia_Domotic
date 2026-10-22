@@ -1,0 +1,164 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%" style="background:#0f172a; font-family:'Segoe UI', Roboto, sans-serif;">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.0"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Top App Navigation Bar -->
+  <rect x="0" y="0" width="1200" height="64" fill="#1e293b" />
+  <circle cx="40" cy="32" r="14" fill="#10b981" />
+  <path d="M 40 22 C 34 30 32 34 32 37 C 32 41 35 44 40 44 C 45 44 48 41 48 37 C 48 34 46 30 40 22 Z" fill="#ffffff"/>
+  <text x="66" y="38" fill="#ffffff" font-size="20" font-weight="700">HydroControl</text>
+  <text x="210" y="38" fill="#10b981" font-size="12" font-weight="600" letter-spacing="1">DASHBOARD</text>
+  <text x="320" y="38" fill="#94a3b8" font-size="14">📚 Catálogo</text>
+  <text x="430" y="38" fill="#94a3b8" font-size="14">🌱 Cultivos</text>
+  <text x="530" y="38" fill="#94a3b8" font-size="14">🔌 Dispositivos IoT</text>
+  <text x="680" y="38" fill="#94a3b8" font-size="14">🔔 Notificaciones</text>
+
+  <!-- User Profile & System Status Pill -->
+  <rect x="980" y="18" width="180" height="30" rx="15" fill="#334155" />
+  <circle cx="1000" cy="33" r="5" fill="#10b981" />
+  <text x="1015" y="38" fill="#f8fafc" font-size="12" font-weight="600">SQLite WAL • En Línea</text>
+
+  <!-- KPI Metrics Row -->
+  <!-- KPI 1 -->
+  <rect x="40" y="88" width="260" height="90" rx="12" fill="#1e293b" filter="url(#cardShadow)"/>
+  <rect x="40" y="88" width="5" height="90" rx="2" fill="#10b981"/>
+  <text x="65" y="115" fill="#94a3b8" font-size="13">CULTIVOS ACTIVOS</text>
+  <text x="65" y="155" fill="#ffffff" font-size="32" font-weight="700">3</text>
+  <text x="105" y="155" fill="#10b981" font-size="14" font-weight="600">🌱 2 Plantas / 🍄 1 Hongo</text>
+
+  <!-- KPI 2 -->
+  <rect x="330" y="88" width="260" height="90" rx="12" fill="#1e293b" filter="url(#cardShadow)"/>
+  <rect x="330" y="88" width="5" height="90" rx="2" fill="#06b6d4"/>
+  <text x="355" y="115" fill="#94a3b8" font-size="13">DISPOSITIVOS IOT</text>
+  <text x="355" y="155" fill="#ffffff" font-size="32" font-weight="700">4</text>
+  <text x="395" y="155" fill="#06b6d4" font-size="14" font-weight="600">🔌 ESP32 / Arduino OK</text>
+
+  <!-- KPI 3 -->
+  <rect x="620" y="88" width="260" height="90" rx="12" fill="#1e293b" filter="url(#cardShadow)"/>
+  <rect x="620" y="88" width="5" height="90" rx="2" fill="#f59e0b"/>
+  <text x="645" y="115" fill="#94a3b8" font-size="13">LECTURAS PROCESADAS</text>
+  <text x="645" y="155" fill="#ffffff" font-size="32" font-weight="700">14,820</text>
+  <text x="760" y="155" fill="#f59e0b" font-size="13">Hoy: +1,240</text>
+
+  <!-- KPI 4 -->
+  <rect x="910" y="88" width="250" height="90" rx="12" fill="#1e293b" filter="url(#cardShadow)"/>
+  <rect x="910" y="88" width="5" height="90" rx="2" fill="#8b5cf6"/>
+  <text x="935" y="115" fill="#94a3b8" font-size="13">SCORE DE SALUD IA</text>
+  <text x="935" y="155" fill="#8b5cf6" font-size="32" font-weight="700">98%</text>
+  <text x="1015" y="155" fill="#10b981" font-size="14" font-weight="600">⭐ ESTADO ÓPTIMO</text>
+
+  <!-- Main Chart Section (Telemetry History) -->
+  <rect x="40" y="205" width="750" height="440" rx="14" fill="#1e293b" filter="url(#cardShadow)"/>
+  <text x="70" y="245" fill="#ffffff" font-size="18" font-weight="600">📊 Telemetría en Tiempo Real: Lechuga Butterhead (Canal A)</text>
+  <text x="70" y="268" fill="#94a3b8" font-size="12">Historial de pH, Conductividad (EC) y Temperatura de Solución Nutritiva</text>
+
+  <!-- Chart Legends -->
+  <circle cx="560" cy="240" r="5" fill="#10b981"/>
+  <text x="572" y="244" fill="#cbd5e1" font-size="12">pH (6.0)</text>
+  <circle cx="635" cy="240" r="5" fill="#06b6d4"/>
+  <text x="647" y="244" fill="#cbd5e1" font-size="12">EC (1.4 mS/cm)</text>
+  <circle cx="735" cy="240" r="5" fill="#f43f5e"/>
+  <text x="747" y="244" fill="#cbd5e1" font-size="12">Temp (21.5°C)</text>
+
+  <!-- Chart Grid Lines -->
+  <line x1="70" y1="300" x2="750" y2="300" stroke="#334155" stroke-dasharray="4"/>
+  <line x1="70" y1="360" x2="750" y2="360" stroke="#334155" stroke-dasharray="4"/>
+  <line x1="70" y1="420" x2="750" y2="420" stroke="#334155" stroke-dasharray="4"/>
+  <line x1="70" y1="480" x2="750" y2="480" stroke="#334155" stroke-dasharray="4"/>
+  <line x1="70" y1="540" x2="750" y2="540" stroke="#334155" stroke-dasharray="4"/>
+
+  <!-- Y Axis Labels -->
+  <text x="50" y="305" fill="#64748b" font-size="11">8.0</text>
+  <text x="50" y="365" fill="#64748b" font-size="11">6.5</text>
+  <text x="50" y="425" fill="#64748b" font-size="11">5.5</text>
+  <text x="50" y="485" fill="#64748b" font-size="11">4.0</text>
+  <text x="50" y="545" fill="#64748b" font-size="11">2.0</text>
+
+  <!-- Chart Curve Fill & Stroke (pH) -->
+  <path d="M 70 380 Q 150 370 230 385 T 390 375 T 520 370 T 640 378 T 750 372 L 750 540 L 70 540 Z" fill="url(#chartGrad)"/>
+  <path d="M 70 380 Q 150 370 230 385 T 390 375 T 520 370 T 640 378 T 750 372" fill="none" stroke="#10b981" stroke-width="3"/>
+
+  <!-- Chart Curve (EC) -->
+  <path d="M 70 440 Q 140 430 240 450 T 400 445 T 530 435 T 660 440 T 750 438" fill="none" stroke="#06b6d4" stroke-width="2.5"/>
+
+  <!-- Chart Time Labels -->
+  <text x="80" y="565" fill="#64748b" font-size="11">00:00</text>
+  <text x="210" y="565" fill="#64748b" font-size="11">04:00</text>
+  <text x="340" y="565" fill="#64748b" font-size="11">08:00</text>
+  <text x="470" y="565" fill="#64748b" font-size="11">12:00</text>
+  <text x="600" y="565" fill="#64748b" font-size="11">16:00</text>
+  <text x="710" y="565" fill="#64748b" font-size="11">20:00</text>
+
+  <!-- Sensor Live Badges Under Chart -->
+  <rect x="70" y="585" width="125" height="42" rx="8" fill="#0f172a"/>
+  <text x="82" y="603" fill="#94a3b8" font-size="10">🧪 pH ACTUAL</text>
+  <text x="82" y="621" fill="#10b981" font-size="15" font-weight="700">6.02 pH ✓</text>
+
+  <rect x="210" y="585" width="125" height="42" rx="8" fill="#0f172a"/>
+  <text x="222" y="603" fill="#94a3b8" font-size="10">⚡ EC NUTRITIVA</text>
+  <text x="222" y="621" fill="#06b6d4" font-size="15" font-weight="700">1.35 mS/cm ✓</text>
+
+  <rect x="350" y="585" width="125" height="42" rx="8" fill="#0f172a"/>
+  <text x="362" y="603" fill="#94a3b8" font-size="10">🌡️ TEMP AGUA</text>
+  <text x="362" y="621" fill="#f43f5e" font-size="15" font-weight="700">21.4 °C ✓</text>
+
+  <rect x="490" y="585" width="125" height="42" rx="8" fill="#0f172a"/>
+  <text x="502" y="603" fill="#94a3b8" font-size="10">💧 HUMEDAD AMB.</text>
+  <text x="502" y="621" fill="#38bdf8" font-size="15" font-weight="700">64.2 % ✓</text>
+
+  <rect x="630" y="585" width="125" height="42" rx="8" fill="#0f172a"/>
+  <text x="642" y="603" fill="#94a3b8" font-size="10">🌊 NIVEL RESERVA</text>
+  <text x="642" y="621" fill="#10b981" font-size="15" font-weight="700">88 % ✓</text>
+
+  <!-- Right Side Column: AI Diagnosis & Weather -->
+  <!-- AI Diagnosis Card -->
+  <rect x="815" y="205" width="345" height="230" rx="14" fill="#1e293b" filter="url(#cardShadow)"/>
+  <text x="835" y="240" fill="#ffffff" font-size="16" font-weight="700">🧠 Diagnóstico Agronómico IA</text>
+  <text x="835" y="260" fill="#94a3b8" font-size="12">Random Forest Evaluator v2.0</text>
+
+  <rect x="835" y="275" width="305" height="45" rx="8" fill="#065f46" stroke="#10b981" stroke-width="1.5"/>
+  <text x="850" y="303" fill="#ecfdf5" font-size="14" font-weight="700">✨ ESTADO: CONDICIONES ÓPTIMAS</text>
+
+  <text x="835" y="345" fill="#cbd5e1" font-size="12" font-weight="600">Recomendaciones del Modelo:</text>
+  <text x="835" y="365" fill="#94a3b8" font-size="11">• Nutrición NPK equilibrada para fase vegetativa.</text>
+  <text x="835" y="385" fill="#94a3b8" font-size="11">• Rango de pH perfecto para absorción de Fe y Ca.</text>
+  <text x="835" y="405" fill="#94a3b8" font-size="11">• Oxigenación del tanque en niveles ideales (>6.5 mg/L).</text>
+
+  <rect x="835" y="415" width="305" height="10" rx="5" fill="#334155"/>
+  <rect x="835" y="415" width="298" height="10" rx="5" fill="#10b981"/>
+
+  <!-- Bioclimatic Card (Open-Meteo) -->
+  <rect x="815" y="450" width="345" height="195" rx="14" fill="#1e293b" filter="url(#cardShadow)"/>
+  <text x="835" y="485" fill="#ffffff" font-size="16" font-weight="700">🌦️ Clima Exterior vs Invernadero</text>
+  <text x="835" y="505" fill="#94a3b8" font-size="12">Integración satelital Open-Meteo API</text>
+
+  <rect x="835" y="520" width="145" height="60" rx="8" fill="#0f172a"/>
+  <text x="847" y="540" fill="#94a3b8" font-size="10">EXTERIOR (OPEN-METEO)</text>
+  <text x="847" y="565" fill="#38bdf8" font-size="17" font-weight="700">18.5°C • 52%</text>
+
+  <rect x="995" y="520" width="145" height="60" rx="8" fill="#0f172a"/>
+  <text x="1007" y="540" fill="#94a3b8" font-size="10">INTERIOR (SENSORES)</text>
+  <text x="1007" y="565" fill="#10b981" font-size="17" font-weight="700">22.1°C • 64%</text>
+
+  <text x="835" y="605" fill="#94a3b8" font-size="11">ΔT Diferencial: +3.6°C • ΔH Humedad: +12%</text>
+  <text x="835" y="625" fill="#10b981" font-size="11" font-weight="600">✓ Microclima controlado sin riesgo de choque térmico</text>
+</svg>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" width="100%" height="100%" style="background:#0f172a; font-family:'Segoe UI', Roboto, sans-serif;">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="500" y="45" fill="#ffffff" font-size="22" font-weight="700" text-anchor="middle">ARQUITECTURA DE MENSAJERÍA Y TELEMETRÍA DUAL</text>
+  <text x="500" y="70" fill="#94a3b8" font-size="13" text-anchor="middle">Separación estricta entre la telemetría del creador y las alertas del cliente</text>
+
+  <!-- Center Core -->
+  <rect x="410" y="210" width="180" height="120" rx="14" fill="#1e293b" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="500" cy="245" r="20" fill="#10b981" />
+  <path d="M 500 233 C 493 243 490 248 490 252 C 490 257 494 261 500 261 C 506 261 510 257 510 252 C 510 248 507 243 500 233 Z" fill="#ffffff"/>
+  <text x="500" y="285" fill="#ffffff" font-size="14" font-weight="700" text-anchor="middle">HYDROCONTROL</text>
+  <text x="500" y="305" fill="#94a3b8" font-size="11" text-anchor="middle">Servidor Flask / SQLite</text>
+
+  <!-- LEFT: BOT 1 (DEVELOPER TELEMETRY) -->
+  <rect x="50" y="110" width="310" height="360" rx="14" fill="#1e293b" stroke="#6366f1" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="50" y="110" width="310" height="48" rx="14" fill="#312e81"/>
+  <text x="70" y="140" fill="#c7d2fe" font-size="15" font-weight="700">🔒 BOT 1: Telemetría Desarrollador</text>
+
+  <text x="70" y="185" fill="#a5b4fc" font-size="12" font-weight="600">AUDIENCIA: CREADOR / PROPIETARIO</text>
+  <text x="70" y="205" fill="#94a3b8" font-size="11">• 100% Invisible y oculto en la UI</text>
+  <text x="70" y="223" fill="#94a3b8" font-size="11">• Configuración en archivo .env o config.py</text>
+  <text x="70" y="241" fill="#94a3b8" font-size="11">• Token: @docmedical_bot</text>
+  
+  <rect x="70" y="260" width="270" height="185" rx="8" fill="#0f172a" stroke="#4338ca" stroke-width="1"/>
+  <text x="85" y="285" fill="#818cf8" font-size="11" font-weight="700">🛰️ Mensajes que recibe:</text>
+  <text x="85" y="308" fill="#cbd5e1" font-size="11">✓ Quién instaló (SO, Python, UUID)</text>
+  <text x="85" y="328" fill="#cbd5e1" font-size="11">✓ Contador de arranques del servidor</text>
+  <text x="85" y="348" fill="#cbd5e1" font-size="11">✓ Consumo DB (KB de hydroponia.db)</text>
+  <text x="85" y="368" fill="#cbd5e1" font-size="11">✓ Total de lecturas y dispositivos IoT</text>
+  <text x="85" y="388" fill="#cbd5e1" font-size="11">✓ Altas instantáneas de cultivos</text>
+  <text x="85" y="408" fill="#cbd5e1" font-size="11">✓ Altas de nuevas especies/sensores</text>
+  <text x="85" y="428" fill="#10b981" font-size="11" font-weight="600">✓ Canal: Telegram Privado (Directo)</text>
+
+  <!-- RIGHT: BOT 2 (USER NOTIFICATIONS) -->
+  <rect x="640" y="110" width="310" height="360" rx="14" fill="#1e293b" stroke="#10b981" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="640" y="110" width="310" height="48" rx="14" fill="#064e3b"/>
+  <text x="660" y="140" fill="#a7f3d0" font-size="15" font-weight="700">👤 BOT 2: Notificaciones de Usuario</text>
+
+  <text x="660" y="185" fill="#6ee7b7" font-size="12" font-weight="600">AUDIENCIA: USUARIO FINAL / OPERADOR</text>
+  <text x="660" y="205" fill="#94a3b8" font-size="11">• Configurable vía Web (/notificaciones)</text>
+  <text x="660" y="223" fill="#94a3b8" font-size="11">• Botón de prueba interactivo</text>
+  <text x="660" y="241" fill="#94a3b8" font-size="11">• Guarda en notificaciones_usuario.json</text>
+
+  <rect x="660" y="260" width="270" height="185" rx="8" fill="#0f172a" stroke="#047857" stroke-width="1"/>
+  <text x="675" y="285" fill="#34d399" font-size="11" font-weight="700">🚨 Mensajes que recibe:</text>
+  <text x="675" y="308" fill="#cbd5e1" font-size="11">✓ Alertas críticas (pH &lt; 5.0 o &gt; 7.5)</text>
+  <text x="675" y="328" fill="#cbd5e1" font-size="11">✓ Nivel de agua bajo / tanque crítico</text>
+  <text x="675" y="348" fill="#cbd5e1" font-size="11">✓ Temperatura/humedad fuera de rango</text>
+  <text x="675" y="368" fill="#cbd5e1" font-size="11">✓ Aviso de cosecha de plantas y hongos</text>
+  <text x="675" y="388" fill="#cbd5e1" font-size="11">✓ Diagnósticos de estrés fisiológico</text>
+  <text x="675" y="408" fill="#38bdf8" font-size="11" font-weight="600">✓ Canal 1: Telegram del usuario</text>
+  <text x="675" y="428" fill="#818cf8" font-size="11" font-weight="600">✓ Canal 2: Discord Webhook (Embeds)</text>
+
+  <!-- Connectors -->
+  <!-- Left connector -->
+  <path d="M 410 270 L 360 270" stroke="#6366f1" stroke-width="2.5" stroke-dasharray="4"/>
+  <circle cx="360" cy="270" r="4" fill="#6366f1"/>
+  
+  <!-- Right connector -->
+  <path d="M 590 270 L 640 270" stroke="#10b981" stroke-width="2.5" stroke-dasharray="4"/>
+  <circle cx="640" cy="270" r="4" fill="#10b981"/>
+</svg>

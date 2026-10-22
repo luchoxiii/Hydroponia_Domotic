@@ -1,0 +1,12 @@
+{
+  "telegram_activo": true,
+  "telegram_token": "token_formulario",
+  "telegram_chat_id": "chat_formulario",
+  "discord_activo": true,
+  "discord_webhook_url": "https://discord.com/api/webhooks/test/web",
+  "alertas_criticas": true,
+  "alertas_advertencias": true,
+  "altas_cultivos": true,
+  "altas_dispositivos": true,
+  "updated_at": "2026-10-22T02:10:31.125592+00:00"
+}
