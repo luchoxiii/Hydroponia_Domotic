@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block titulo %}Nuevo Cultivo{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <h2><i class="bi bi-plus-circle"></i> Nuevo Cultivo</h2>
+    <p class="text-muted">Registra un nuevo cultivo en tu sistema hidropónico</p>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Especie *</label>
+                        <select name="especie_id" class="form-select" required>
+                            <option value="">Seleccionar especie...</option>
+                            {% for especie in especies %}
+                            <option value="{{ especie.id }}" 
+                                    {% if request.args.get('especie_id')|int == especie.id %}selected{% endif %}>
+                                {{ '🌱' if especie.categoria == 'PLANTA' else '🍄' }}
+                                {{ especie.nombre_comun }} ({{ especie.nombre_cientifico or 'N/A' }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre del Cultivo *</label>
+                        <input type="text" name="nombre" class="form-control" required 
+                               placeholder="Ej: Lechugas Canal A">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha de Siembra *</label>
+                        <input type="date" name="fecha_siembra" class="form-control" required 
+                               value="{{ today }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ubicación</label>
+                        <input type="text" name="ubicacion" class="form-control" 
+                               placeholder="Ej: Canal A - Posición 3">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notas</label>
+                        <textarea name="notas" class="form-control" rows="3" 
+                                  placeholder="Observaciones adicionales..."></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Crear Cultivo
+                        </button>
+                        <a href="{{ url_for('cultivos_lista') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block titulo %}{{ especie.nombre_comun }}{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('catalogo_lista') }}">Catálogo</a></li>
+            <li class="breadcrumb-item active">{{ especie.nombre_comun }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge bg-{{ 'success' if especie.categoria == 'PLANTA' else 'purple' }} fs-6 me-2">
+                            {{ '🌱' if especie.categoria == 'PLANTA' else '🍄' }} {{ especie.categoria }}
+                        </span>
+                        <h3 class="mb-0">{{ especie.nombre_comun }}</h3>
+                    </div>
+                    <p class="text-muted fst-italic">{{ especie.nombre_cientifico or 'Sin nombre científico' }}</p>
+                    
+                    {% if especie.descripcion %}
+                    <p>{{ especie.descripcion }}</p>
+                    {% endif %}
+
+                    <h5 class="mt-4">Parámetros Ideales</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Parámetro</th>
+                                    <th>Mínimo</th>
+                                    <th>Máximo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>🧪 pH</td>
+                                    <td>{{ especie.ph_min }}</td>
+                                    <td>{{ especie.ph_max }}</td>
+                                </tr>
+                                <tr>
+                                    <td>⚡ EC (mS/cm)</td>
+                                    <td>{{ especie.ec_min }}</td>
+                                    <td>{{ especie.ec_max }}</td>
+                                </tr>
+                                <tr>
+                                    <td>🌡️ Temperatura (°C)</td>
+                                    <td>{{ especie.temp_min }}</td>
+                                    <td>{{ especie.temp_max }}</td>
+                                </tr>
+                                <tr>
+                                    <td>💧 Humedad (%)</td>
+                                    <td>{{ especie.humedad_min }}</td>
+                                    <td>{{ especie.humedad_max }}</td>
+                                </tr>
+                                <tr>
+                                    <td>☀️ Luz (horas/día)</td>
+                                    <td>{{ especie.luz_horas_min }}</td>
+                                    <td>{{ especie.luz_horas_max }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if especie.ciclo_dias %}
+                    <p><strong>⏱️ Ciclo estimado:</strong> {{ especie.ciclo_dias }} días</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('cultivos_agregar') }}?especie_id={{ especie.id }}" class="btn btn-success">
+                        <i class="bi bi-plus-lg"></i> Crear Cultivo con esta Especie
+                    </a>
+                    <form method="POST" action="{{ url_for('catalogo_eliminar', especie_id=especie.id) }}" 
+                          class="d-inline" onsubmit="return confirm('¿Eliminar esta especie del catálogo?')">
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cultivos usando esta especie -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Cultivos Activos</h5>
+                </div>
+                <div class="card-body">
+                    {% set cultivos_activos = especie.cultivos|selectattr('estado', 'equalto', 'ACTIVO')|list %}
+                    {% if cultivos_activos %}
+                    <div class="list-group list-group-flush">
+                        {% for cultivo in cultivos_activos %}
+                        <a href="{{ url_for('cultivo_detalle', cultivo_id=cultivo.id) }}" 
+                           class="list-group-item list-group-item-action">
+                            <strong>{{ cultivo.nombre }}</strong>
+                            <br><small class="text-muted">{{ cultivo.ubicacion or 'Sin ubicación' }} | {{ cultivo.dias_activo }} días</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No hay cultivos activos de esta especie.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

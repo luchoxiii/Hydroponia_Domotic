@@ -1,0 +1,173 @@
+/* ================ HYDROCONTROL - Sistema de Hidroponía ================ */
+
+:root {
+    --hydro-primary: #198754;
+    --hydro-dark: #1a1d21;
+    --hydro-light: #f0f7f0;
+    --hydro-accent: #20c997;
+    --bg-purple: #6f42c1;
+}
+
+/* Layout general */
+body {
+    background-color: #f5f5f5;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.main-content {
+    padding-top: 70px;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+.navbar .badge {
+    font-size: 0.65rem;
+    position: relative;
+    top: -8px;
+}
+
+/* Tarjetas estadísticas */
+.stat-card {
+    border-left-width: 4px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card .card-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+/* Tarjetas de especies */
+.especie-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-top: 3px solid var(--hydro-primary);
+}
+
+.especie-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Tarjetas de cultivo */
+.cultivo-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 4px solid var(--hydro-primary);
+}
+
+.cultivo-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Tarjetas de sensores */
+.sensor-card {
+    border-width: 2px;
+    transition: transform 0.2s;
+}
+
+.sensor-card:hover {
+    transform: scale(1.05);
+}
+
+/* Badge purple para hongos */
+.bg-purple {
+    background-color: var(--bg-purple) !important;
+}
+
+/* Progress bars */
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Alertas list */
+.list-group-item {
+    border-left-width: 3px;
+}
+
+/* Tables */
+.table th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+/* Formularios */
+.form-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+/* Animaciones */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.badge.bg-danger {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Cards generales */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 2px solid #f0f0f0;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stat-card .card-title {
+        font-size: 1.8rem;
+    }
+    
+    .sensor-card .fs-3 {
+        font-size: 1.2rem !important;
+    }
+    
+    .sensor-card h4 {
+        font-size: 1rem;
+    }
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--hydro-accent);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--hydro-primary);
+}

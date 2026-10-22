@@ -1,0 +1,31 @@
+services:
+  hydrocontrol:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hydrocontrol:latest
+    container_name: hydrocontrol_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - ENV=production
+      - DEBUG=false
+      - USE_PROXY_FIX=true
+      - WAITRESS_THREADS=8
+      - LOG_LEVEL=INFO
+      - SECRET_KEY=${SECRET_KEY:-hydroponia-production-master-secret-key-2024}
+      - BITACORA_SECRET_KEY=${BITACORA_SECRET_KEY:-hydroponia-audit-ledger-master-key-2024}
+      - DEV_TELEGRAM_BOT_TOKEN=${DEV_TELEGRAM_BOT_TOKEN:-8834147137:AAEdPSoxM8S5vAmoX0UCxz240gt_GEk8G44}
+      - DEV_TELEGRAM_CHAT_ID=${DEV_TELEGRAM_CHAT_ID:-56335145}
+      - DEV_TELEMETRIA_ACTIVA=${DEV_TELEMETRIA_ACTIVA:-true}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

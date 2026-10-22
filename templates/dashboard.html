@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block titulo %}Dashboard{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+    <p class="text-muted">Resumen general del sistema hidropónico</p>
+
+    <!-- Tarjetas de resumen -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Cultivos Activos</h6>
+                            <h2 class="card-title mb-0">{{ stats.total_cultivos }}</h2>
+                        </div>
+                        <i class="bi bi-flower1 display-4 text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Alertas Pendientes</h6>
+                            <h2 class="card-title mb-0">{{ stats.total_alertas }}</h2>
+                        </div>
+                        <i class="bi bi-bell display-4 text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card border-danger">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Alertas Críticas</h6>
+                            <h2 class="card-title mb-0">{{ stats.alertas_criticas }}</h2>
+                        </div>
+                        <i class="bi bi-exclamation-triangle display-4 text-danger opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Lista de cultivos activos -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-flower1"></i> Cultivos Activos</h5>
+                    <a href="{{ url_for('cultivos_agregar') }}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus-lg"></i> Nuevo
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if stats.cultivos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Especie</th>
+                                    <th>Días</th>
+                                    <th>Progreso</th>
+                                    <th>Alertas</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cultivo in stats.cultivos %}
+                                <tr>
+                                    <td><strong>{{ cultivo.nombre }}</strong></td>
+                                    <td>{{ cultivo.especie.nombre_comun if cultivo.especie else 'N/A' }}</td>
+                                    <td>{{ cultivo.dias_activo }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-success" style="width: {{ cultivo.progreso }}%">
+                                                {{ cultivo.progreso }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if cultivo.alertas_no_leidas > 0 %}
+                                        <span class="badge bg-danger">{{ cultivo.alertas_no_leidas }}</span>
+                                        {% else %}
+                                        <span class="badge bg-success">OK</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1 justify-content-end">
+                                            <a href="{{ url_for('cultivo_detalle', cultivo_id=cultivo.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" title="Ver detalles y telemetría">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <form method="POST" action="{{ url_for('cultivo_eliminar', cultivo_id=cultivo.id) }}" 
+                                                  class="d-inline" onsubmit="return confirm('¿Seguro que deseas eliminar el cultivo &quot;{{ cultivo.nombre }}&quot;? Se desvincularán los sensores y se borrará todo su historial.')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar cultivo">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-flower1 display-4"></i>
+                        <p class="mt-2">No hay cultivos activos.</p>
+                        <a href="{{ url_for('cultivos_agregar') }}" class="btn btn-success">
+                            <i class="bi bi-plus-lg"></i> Agregar primer cultivo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas recientes -->
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-bell"></i> Alertas Recientes</h5>
+                    <a href="{{ url_for('alertas_lista') }}" class="btn btn-sm btn-outline-secondary">
+                        Ver todas
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if alertas_recientes %}
+                    <div class="list-group list-group-flush">
+                        {% for alerta in alertas_recientes %}
+                        <div class="list-group-item list-group-item-{{ alerta.nivel_info.color }} {% if alerta.leida %}opacity-50{% endif %}">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>{{ alerta.nivel_info.icono }} {{ alerta.cultivo.nombre if alerta.cultivo else '' }}</strong>
+                                    <p class="mb-0 small">{{ alerta.mensaje }}</p>
+                                </div>
+                                {% if not alerta.leida %}
+                                <form method="POST" action="{{ url_for('alerta_marcar_leida', alerta_id=alerta.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary" title="Marcar como leída">
+                                        <i class="bi bi-check"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ alerta.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-check-circle display-4 text-success"></i>
+                        <p class="mt-2">Sin alertas. ¡Todo en orden!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

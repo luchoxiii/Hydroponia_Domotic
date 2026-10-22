@@ -1,0 +1,556 @@
+{% extends 'base.html' %}
+{% block titulo %}Inteligencia Artificial & ML{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <!-- Encabezado Principal -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2><i class="bi bi-robot text-primary"></i> Centro de Inteligencia Artificial & ML</h2>
+            <p class="text-muted mb-0">Modelos predictivos Random Forest, diagnóstico de estrés agronómico y simulación de microclima</p>
+        </div>
+        <div class="d-flex gap-2">
+            <form method="POST" action="{{ url_for('ml_reentrenar') }}">
+                <button type="submit" class="btn btn-outline-primary" title="Reentrenar el modelo con datos sintéticos y reales">
+                    <i class="bi bi-arrow-repeat"></i> Re-entrenar Modelo
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Fila 1: Métricas de Rendimiento del Modelo -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card border-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Algoritmo Base</h6>
+                            <h5 class="card-title text-primary mb-1" style="font-size: 1.25rem;">Random Forest</h5>
+                            <small class="text-muted">100 estimadores + StandardScaler</small>
+                        </div>
+                        <i class="bi bi-cpu display-4 text-primary opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Exactitud Global (F1)</h6>
+                            <h2 class="card-title text-success mb-0">{{ metricas.f1_score }}%</h2>
+                            <small class="text-muted">Accuracy: {{ metricas.accuracy }}%</small>
+                        </div>
+                        <i class="bi bi-check2-circle display-4 text-success opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Muestras de Aprendizaje</h6>
+                            <h2 class="card-title text-info mb-0">{{ metricas.n_muestras }}</h2>
+                            <small class="text-muted">Casos fisiológicos balanceados</small>
+                        </div>
+                        <i class="bi bi-diagram-3 display-4 text-info opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card border-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Estado del Pipeline</h6>
+                            <h5 class="card-title text-warning mb-1" style="font-size: 1.15rem;">Calibrado & Activo</h5>
+                            <small class="text-muted">{{ metricas.fecha_entrenamiento }}</small>
+                        </div>
+                        <i class="bi bi-shield-check display-4 text-warning opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila 2: Gráfico de Importancia de Variables y Clases Diagnosticadas -->
+    <div class="row g-3 mb-4">
+        <!-- Importancia de Características -->
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-fill text-primary"></i> Ponderación de Variables (Feature Importance)</h5>
+                    <small class="text-muted">Gini Impurity</small>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">Relevancia porcentual asignada por los árboles de decisión para diagnosticar la salud del cultivo:</p>
+                    <canvas id="chartFeatureImportance" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taxonomía de Diagnósticos de IA -->
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-tags-fill text-success"></i> Patologías y Estados que Clasifica la IA</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex align-items-start gap-2">
+                            <span class="fs-4">🌿</span>
+                            <div>
+                                <strong class="text-success">Óptimo / Saludable</strong>
+                                <p class="small text-muted mb-0">Variables químicas y microclimáticas dentro del rango biológico ideal de la especie.</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-2">
+                            <span class="fs-4">🔥</span>
+                            <div>
+                                <strong class="text-danger">Estrés Térmico (Calor / Frío)</strong>
+                                <p class="small text-muted mb-0">Temperatura interna fuera de rango o diferencial térmico adverso con el exterior.</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-2">
+                            <span class="fs-4">💧</span>
+                            <div>
+                                <strong class="text-warning">Estrés Hídrico</strong>
+                                <p class="small text-muted mb-0">Nivel de depósito de nutrientes crítico (< 25%) o déficit agudo de transpiración.</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-2">
+                            <span class="fs-4">🧪</span>
+                            <div>
+                                <strong class="text-danger">Desbalance Nutricional</strong>
+                                <p class="small text-muted mb-0">pH descalibrado (bloqueo iónico) o electroconductividad EC tóxica / insuficiente.</p>
+                            </div>
+                        </div>
+                        <div class="list-group-item d-flex align-items-start gap-2">
+                            <span class="fs-4">🍄</span>
+                            <div>
+                                <strong class="text-warning">Riesgo Patógeno / Fúngico</strong>
+                                <p class="small text-muted mb-0">Condensación y humedad extrema combinada con calor favorable para bacterias y hongos dañinos.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila 3: Diagnóstico en Vivo de los Cultivos Activos -->
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-heart-pulse-fill text-danger"></i> Diagnóstico Predictivo de Cultivos en Producción</h5>
+            <span class="badge bg-primary">{{ diagnosticos_cultivos|length }} activos evaluados</span>
+        </div>
+        <div class="card-body">
+            {% if diagnosticos_cultivos %}
+            <div class="row g-3">
+                {% for item in diagnosticos_cultivos %}
+                {% set c = item.cultivo %}
+                {% set diag = item.diagnostico %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-{{ diag.badge_color }} shadow-sm">
+                        <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                            <strong>{{ '🌱' if c.especie.categoria == 'PLANTA' else '🍄' }} {{ c.nombre }}</strong>
+                            <span class="badge bg-{{ diag.badge_color }}">{{ diag.icono }} {{ diag.diagnostico_titulo }}</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Score de Salud -->
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="text-muted small">Score de Salud Agronómica:</span>
+                                <h4 class="mb-0 text-{{ diag.badge_color }} fw-bold">{{ diag.score_salud }} / 100</h4>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-{{ diag.badge_color }}" style="width: {{ diag.score_salud }}%;"></div>
+                            </div>
+
+                            <!-- Probabilidades del modelo -->
+                            <small class="text-muted d-block mb-1">Distribución de Confianza del Modelo:</small>
+                            <div class="small bg-light p-2 rounded mb-3">
+                                {% for clase, prob in diag.probabilidades.items() %}
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>{{ clase }}</span>
+                                    <span class="fw-semibold">{{ prob }}%</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Recomendación IA -->
+                            <div class="alert alert-light border small mb-0">
+                                <strong>💡 Recomendación IA:</strong>
+                                <p class="mb-0 mt-1">{{ diag.recomendacion_ia }}</p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent text-end">
+                            <a href="{{ url_for('cultivo_detalle', cultivo_id=c.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-graph-up"></i> Ver Métricas en Detalle
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-flower1 display-4"></i>
+                <p class="mt-2">No hay cultivos activos en este momento para diagnosticar.</p>
+                <a href="{{ url_for('cultivos_agregar') }}" class="btn btn-success btn-sm">Crear un Cultivo</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Fila 4: Simulador Interactivo Agronómico "What-If" -->
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-sliders"></i> Simulador Interactivo Agronómico "What-If" (Laboratorio de IA)</h5>
+            <span class="badge bg-light text-primary">Inferencia en Tiempo Real</span>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Experimenta cómo responde el modelo de Machine Learning ajustando las variables químicas y microclimáticas antes de aplicarlas en tu invernadero real:</p>
+
+            <!-- Presets Rápidos -->
+            <div class="mb-4">
+                <label class="form-label fw-bold small text-muted">PRESETS DE ESCENARIOS DE PRUEBA:</label>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-sm btn-outline-success" onclick="aplicarPreset('optimo')">🌿 Condiciones Ideales</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="aplicarPreset('calor')">🔥 Ola de Calor Extremo</button>
+                    <button class="btn btn-sm btn-outline-warning" onclick="aplicarPreset('acidez')">⚠️ Solución Ácida (pH 4.2)</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="aplicarPreset('sequia')">💧 Depósito Vacío (Agua 12%)</button>
+                    <button class="btn btn-sm btn-outline-info" onclick="aplicarPreset('patogeno')">🍄 Humedad Crítica / Riesgo Fúngico</button>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Controles / Sliders -->
+                <div class="col-lg-7">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>🧪 Acidez (pH):</span>
+                                <span class="fw-bold text-primary" id="val_ph">6.0</span>
+                            </label>
+                            <input type="range" class="form-range" id="slider_ph" min="3.0" max="9.0" step="0.1" value="6.0" oninput="actualizarSimulacion()">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>⚡ Conductividad EC (mS/cm):</span>
+                                <span class="fw-bold text-primary" id="val_ec">1.5</span>
+                            </label>
+                            <input type="range" class="form-range" id="slider_ec" min="0.0" max="5.0" step="0.1" value="1.5" oninput="actualizarSimulacion()">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>🌡️ Temperatura Interna (°C):</span>
+                                <span class="fw-bold text-primary" id="val_temp_in">22.0</span>
+                            </label>
+                            <input type="range" class="form-range" id="slider_temp_in" min="10.0" max="45.0" step="0.5" value="22.0" oninput="actualizarSimulacion()">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>💧 Humedad Relativa (%):</span>
+                                <span class="fw-bold text-primary" id="val_hum_in">65</span>
+                            </label>
+                            <input type="range" class="form-range" id="slider_hum_in" min="20" max="100" step="1" value="65" oninput="actualizarSimulacion()">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>🌊 Nivel de Agua Depósito (%):</span>
+                                <span class="fw-bold text-primary" id="val_agua">80</span>
+                            </label>
+                            <input type="range" class="form-range" id="slider_agua" min="0" max="100" step="1" value="80" oninput="actualizarSimulacion()">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>☀️ Fotoperíodo (horas luz):</span>
+                                <span class="fw-bold text-primary" id="val_luz">12.0</span>
+                            </label>
+                            <input type="range" class="form-range" id="slider_luz" min="0" max="24" step="1" value="12" oninput="actualizarSimulacion()">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label d-flex justify-content-between">
+                                <span>🌤️ Temp. Exterior Open-Meteo (°C):</span>
+                                <span class="fw-bold text-primary" id="val_temp_ext">20.0</span>
+                            </label>
+                            <input type="range" class="form-range" id="slider_temp_ext" min="-5" max="45" step="0.5" value="20.0" oninput="actualizarSimulacion()">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">🌱 Tipo de Organismo:</label>
+                            <select class="form-select" id="select_hongo" onchange="actualizarSimulacion()">
+                                <option value="0" selected>🌱 Planta Hidropónica (Lechuga, Tomate, Albahaca)</option>
+                                <option value="1">🍄 Hongo / Cámara de Fructificación (Seta Ostra, Melena de León)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resultado de Inferencia en Tiempo Real -->
+                <div class="col-lg-5">
+                    <div class="card h-100 bg-light border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="text-muted text-uppercase mb-2">Diagnóstico Instantáneo de la IA</h6>
+                            
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span class="display-4" id="sim_icono">🌿</span>
+                                <div>
+                                    <h4 class="mb-0 fw-bold" id="sim_titulo">Óptimo / Saludable</h4>
+                                    <span class="badge bg-success" id="sim_badge">Estado Saludable</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span class="small text-muted">Score de Salud Proyectado:</span>
+                                    <strong class="text-success fs-5" id="sim_score">92 / 100</strong>
+                                </div>
+                                <div class="progress" style="height: 12px;">
+                                    <div class="progress-bar bg-success" id="sim_progress_bar" style="width: 92%;"></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="small text-muted fw-bold">Probabilidades del Modelo:</label>
+                                <div id="sim_probabilidades_box" class="bg-white p-2 rounded border small">
+                                    <!-- Rellenado dinámicamente -->
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info py-2 px-3 small mb-0">
+                                <strong>💡 Recomendación Prescriptiva:</strong>
+                                <p class="mb-0 mt-1" id="sim_recomendacion">El cultivo se encuentra en condiciones vigorosas. Mantener la rutina de fotoperíodo y nutrientes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila 5: Modelo de Crecimiento & Cosecha por Grados Día (GDD) -->
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-calendar-check text-success"></i> Estimación de Maduración y Cosecha (Modelo GDD)</h5>
+            <small class="text-muted">Integral Térmica de Crecimiento: GDD = Σ max(0, T - T<sub>base</sub>)</small>
+        </div>
+        <div class="card-body">
+            {% if proyecciones_gdd %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Cultivo</th>
+                            <th>Especie</th>
+                            <th>Días Activo</th>
+                            <th>Ciclo Estimado</th>
+                            <th>GDD Acumulados / Objetivo</th>
+                            <th>Progreso Fisiológico</th>
+                            <th>Días Restantes</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in proyecciones_gdd %}
+                        {% set c = item.cultivo %}
+                        {% set gdd = item.gdd %}
+                        <tr>
+                            <td><strong>{{ c.nombre }}</strong></td>
+                            <td>{{ c.especie.nombre_comun if c.especie else 'N/A' }}</td>
+                            <td>{{ gdd.dias_activo }} días</td>
+                            <td>{{ gdd.ciclo_total_dias }} días</td>
+                            <td><code>{{ gdd.gdd_acumulado }} / {{ gdd.gdd_objetivo }} °C·día</code></td>
+                            <td style="min-width: 140px;">
+                                <div class="progress" style="height: 16px;">
+                                    <div class="progress-bar bg-{{ gdd.badge }}" style="width: {{ gdd.progreso_porcentaje }}%;">
+                                        {{ gdd.progreso_porcentaje }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if gdd.dias_estimados_restantes == 0 %}
+                                <span class="badge bg-success">¡Cosechar Hoy!</span>
+                                {% else %}
+                                <strong>~{{ gdd.dias_estimados_restantes }}</strong> días
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-{{ gdd.badge }}">{{ gdd.estado_maduracion }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center mb-0">No hay cultivos activos para calcular proyecciones de grados día.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ==================== 1. GRÁFICO DE IMPORTANCIA DE VARIABLES ====================
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('chartFeatureImportance');
+    if (ctx) {
+        const importancias = {{ metricas.importancias|tojson }};
+        const labels = importancias.map(i => i.feature);
+        const data = importancias.map(i => i.importancia);
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Importancia Relativa (%)',
+                    data: data,
+                    backgroundColor: 'rgba(13, 110, 253, 0.75)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(c) { return c.parsed.x + '% de relevancia'; }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 30,
+                        title: { display: true, text: 'Importancia Gini (%)' }
+                    }
+                }
+            }
+        });
+    }
+
+    // Inicializar simulación What-If
+    actualizarSimulacion();
+});
+
+// ==================== 2. SIMULADOR WHAT-IF INTERACTIVO ====================
+let timeoutSim = null;
+
+function aplicarPreset(nombre) {
+    if (nombre === 'optimo') {
+        setVal('slider_ph', 6.0);
+        setVal('slider_ec', 1.5);
+        setVal('slider_temp_in', 22.0);
+        setVal('slider_hum_in', 65);
+        setVal('slider_agua', 85);
+        document.getElementById('select_hongo').value = "0";
+    } else if (nombre === 'calor') {
+        setVal('slider_ph', 6.2);
+        setVal('slider_ec', 1.6);
+        setVal('slider_temp_in', 36.5);
+        setVal('slider_temp_ext', 35.0);
+        setVal('slider_hum_in', 45);
+        setVal('slider_agua', 60);
+    } else if (nombre === 'acidez') {
+        setVal('slider_ph', 4.2);
+        setVal('slider_ec', 1.4);
+        setVal('slider_temp_in', 21.0);
+        setVal('slider_hum_in', 60);
+    } else if (nombre === 'sequia') {
+        setVal('slider_agua', 12);
+        setVal('slider_hum_in', 28);
+        setVal('slider_temp_in', 25.0);
+    } else if (nombre === 'patogeno') {
+        setVal('slider_hum_in', 98);
+        setVal('slider_temp_in', 29.5);
+        setVal('slider_agua', 90);
+    }
+    actualizarSimulacion();
+}
+
+function setVal(id, val) {
+    document.getElementById(id).value = val;
+}
+
+function actualizarSimulacion() {
+    // Actualizar etiquetas numéricas
+    document.getElementById('val_ph').textContent = document.getElementById('slider_ph').value;
+    document.getElementById('val_ec').textContent = document.getElementById('slider_ec').value;
+    document.getElementById('val_temp_in').textContent = document.getElementById('slider_temp_in').value;
+    document.getElementById('val_hum_in').textContent = document.getElementById('slider_hum_in').value;
+    document.getElementById('val_agua').textContent = document.getElementById('slider_agua').value;
+    document.getElementById('val_luz').textContent = document.getElementById('slider_luz').value;
+    document.getElementById('val_temp_ext').textContent = document.getElementById('slider_temp_ext').value;
+
+    clearTimeout(timeoutSim);
+    timeoutSim = setTimeout(() => {
+        const payload = {
+            ph: parseFloat(document.getElementById('slider_ph').value),
+            ec: parseFloat(document.getElementById('slider_ec').value),
+            temp_in: parseFloat(document.getElementById('slider_temp_in').value),
+            hum_in: parseFloat(document.getElementById('slider_hum_in').value),
+            agua: parseFloat(document.getElementById('slider_agua').value),
+            luz: parseFloat(document.getElementById('slider_luz').value),
+            temp_ext: parseFloat(document.getElementById('slider_temp_ext').value),
+            hum_ext: 55.0,
+            es_hongo: parseInt(document.getElementById('select_hongo').value),
+            dias: 20
+        };
+
+        fetch('/api/ml/simular', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+            document.getElementById('sim_icono').textContent = res.icono;
+            document.getElementById('sim_titulo').textContent = res.diagnostico_titulo;
+            
+            const badge = document.getElementById('sim_badge');
+            badge.className = 'badge bg-' + res.badge_color;
+            badge.textContent = res.diagnostico_codigo;
+
+            document.getElementById('sim_score').textContent = res.score_salud + ' / 100';
+            document.getElementById('sim_score').className = 'fs-5 fw-bold text-' + res.badge_color;
+
+            const bar = document.getElementById('sim_progress_bar');
+            bar.className = 'progress-bar bg-' + res.badge_color;
+            bar.style.width = res.score_salud + '%';
+
+            document.getElementById('sim_recomendacion').textContent = res.recomendacion_ia;
+
+            // Render probabilidades
+            const box = document.getElementById('sim_probabilidades_box');
+            box.innerHTML = '';
+            for (const [clase, prob] of Object.entries(res.probabilidades)) {
+                const row = document.createElement('div');
+                row.className = 'd-flex justify-content-between align-items-center mb-1';
+                row.innerHTML = `<span>${clase}</span><span class="fw-bold">${prob}%</span>`;
+                box.appendChild(row);
+            }
+        })
+        .catch(err => {
+            console.error("Error en simulación ML:", err);
+        });
+    }, 150);
+}
+</script>
+{% endblock %}

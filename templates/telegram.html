@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% block titulo %}Telegram - Telemetría y Alertas{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2><i class="bi bi-telegram text-info"></i> Telemetría y Alertas por Telegram</h2>
+            <p class="text-muted">Recibe notificaciones críticas y reportes biométricos de tus cultivos directamente en tu teléfono o PC</p>
+        </div>
+        <div class="d-flex gap-2">
+            <form method="POST" action="{{ url_for('telegram_enviar_general') }}" class="d-inline">
+                <button type="submit" class="btn btn-outline-primary" {% if not cfg.bot_token or not cfg.chat_id %}disabled{% endif %}>
+                    <i class="bi bi-send"></i> Enviar Resumen General
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('telegram_probar') }}" class="d-inline">
+                <button type="submit" class="btn btn-info text-white" {% if not cfg.bot_token or not cfg.chat_id %}disabled{% endif %}>
+                    <i class="bi bi-check2-circle"></i> Probar Conexión
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Estado de Integración -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 border-{{ 'success' if cfg.bot_token and cfg.chat_id else 'warning' }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Estado del Enlace</h6>
+                            <h3 class="card-title mb-0 mt-1">
+                                {% if cfg.bot_token and cfg.chat_id %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Vinculado</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Sin configurar</span>
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <i class="bi bi-telegram display-4 text-info opacity-50"></i>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Origen: <strong>{{ 'Interfaz Web (JSON)' if cfg.origen == 'archivo' else 'Variables de entorno / .env' if cfg.origen == 'entorno' else 'Pendiente' }}</strong>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 border-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Alertas Automáticas</h6>
+                            <h3 class="card-title mb-0 mt-1">
+                                {% if cfg.notificaciones_activas %}
+                                <span class="badge bg-info text-dark"><i class="bi bi-bell-fill"></i> Activadas</span>
+                                {% else %}
+                                <span class="badge bg-secondary"><i class="bi bi-bell-slash"></i> Desactivadas</span>
+                                {% endif %}
+                            </h3>
+                        </div>
+                        <i class="bi bi-broadcast display-4 text-info opacity-50"></i>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Envío en tiempo real ante desbalances de pH, EC, agua o temp.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card h-100 border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-subtitle text-muted">Chat ID Destino</h6>
+                            <h4 class="card-title mb-0 mt-1 font-monospace">
+                                {{ cfg.chat_id or 'No configurado' }}
+                            </h4>
+                        </div>
+                        <i class="bi bi-chat-dots display-4 text-primary opacity-50"></i>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Canal personal, grupo de trabajo o sala de monitoreo
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Formulario de Configuración -->
+        <div class="col-lg-5">
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> Credenciales de Telegram</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('telegram_guardar_config') }}">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Bot Token <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="password" name="bot_token" id="inputBotToken" class="form-control font-monospace" 
+                                       placeholder="123456789:ABCdefGHIjklMNO..." value="{{ cfg.bot_token }}" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleTokenVisibility()">
+                                    <i class="bi bi-eye" id="iconTokenEye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Proporcionado por <code>@BotFather</code> en Telegram.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                Chat ID <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="chat_id" class="form-control font-monospace" 
+                                   placeholder="987654321 o -100..." value="{{ cfg.chat_id }}" required>
+                            <div class="form-text">Tu ID numérico personal o el ID del grupo/canal.</div>
+                        </div>
+
+                        <div class="mb-4 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="notificaciones_activas" value="1" id="checkNotif"
+                                   {% if cfg.notificaciones_activas %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold" for="checkNotif">
+                                Activar envío automático de alertas a Telegram
+                            </label>
+                            <div class="form-text small">Cuando una lectura de sensor salga de rango, se despachará un mensaje al instante.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-save"></i> Guardar Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Enviar Telemetría de Cultivo Específico -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-send-check"></i> Enviar Telemetría de un Cultivo</h5>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-3">Selecciona uno de tus cultivos activos para despachar su informe biométrico a Telegram ahora:</p>
+                    {% if cultivos %}
+                    <div class="list-group list-group-flush">
+                        {% for c in cultivos %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <strong>{{ '🌱' if c.especie.categoria == 'PLANTA' else '🍄' }} {{ c.nombre }}</strong>
+                                <br><small class="text-muted">{{ c.especie.nombre_comun if c.especie else '' }} | Día {{ c.dias_activo }}</small>
+                            </div>
+                            <form method="POST" action="{{ url_for('cultivo_enviar_telegram', cultivo_id=c.id) }}">
+                                <button type="submit" class="btn btn-sm btn-outline-info" {% if not cfg.bot_token or not cfg.chat_id %}disabled{% endif %}>
+                                    <i class="bi bi-telegram"></i> Enviar
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">No hay cultivos activos registrados.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Guía Paso a Paso: DÓNDE Y CÓMO PONERLA -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-book"></i> Guía Rápida: ¿Cómo y Dónde Configurar Telegram?</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="accordionGuia">
+                        <!-- Paso 1: Crear Bot -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#paso1">
+                                    <span class="badge bg-primary me-2">Paso 1</span> Crear tu Bot en Telegram con @BotFather
+                                </button>
+                            </h2>
+                            <div id="paso1" class="accordion-collapse collapse show" data-bs-parent="#accordionGuia">
+                                <div class="accordion-body">
+                                    <ol class="mb-2">
+                                        <li>Abre tu aplicación de Telegram en tu teléfono o PC.</li>
+                                        <li>En el buscador de Telegram escribe: <code>@BotFather</code> (busca el que tiene la tilde azul verificada).</li>
+                                        <li>Envía el comando: <code>/newbot</code>.</li>
+                                        <li>BotFather te pedirá un <strong>Nombre</strong> para tu bot (ej: <code>Mi Hidroponia Bot</code>).</li>
+                                        <li>Luego te pedirá un <strong>Usuario</strong> que debe terminar en <code>bot</code> (ej: <code>mi_cultivo_hydro_bot</code>).</li>
+                                        <li>¡Listo! BotFather te dará un <strong>HTTP API Token</strong> con un formato similar a:
+                                            <div class="alert alert-secondary mt-2 mb-0 font-monospace small">
+                                                7123456789:AAFlkBZ-qT0123456789abcdefghijk
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 2: Obtener Chat ID -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#paso2">
+                                    <span class="badge bg-primary me-2">Paso 2</span> Iniciar el Bot y Obtener tu Chat ID
+                                </button>
+                            </h2>
+                            <div id="paso2" class="accordion-collapse collapse" data-bs-parent="#accordionGuia">
+                                <div class="accordion-body">
+                                    <ol class="mb-2">
+                                        <li><strong>Muy importante:</strong> Busca a tu bot recién creado por su nombre de usuario en Telegram y presiona el botón <strong>INICIAR</strong> (o envíale <code>/start</code>). Los bots de Telegram no pueden iniciar conversaciones primero.</li>
+                                        <li>Para obtener tu número de <strong>Chat ID</strong>:
+                                            <ul>
+                                                <li>Busca en Telegram a <code>@userinfobot</code> y dale <code>/start</code>. Te responderá inmediatamente con tu <code>Id</code> (ej: <code>987654321</code>).</li>
+                                                <li>O si quieres que los mensajes lleguen a un <strong>Grupo</strong>: agrega tu bot al grupo y agrega también a <code>@RawDataBot</code> temporalmente para ver el <code>chat.id</code> del grupo (empieza con <code>-100...</code>).</li>
+                                            </ul>
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 3: Dónde Ponerla -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#paso3">
+                                    <span class="badge bg-success me-2">Paso 3</span> ¿Dónde poner las claves en el sistema? (3 opciones)
+                                </button>
+                            </h2>
+                            <div id="paso3" class="accordion-collapse collapse" data-bs-parent="#accordionGuia">
+                                <div class="accordion-body">
+                                    <p class="mb-2">Puedes colocar el <strong>Token</strong> y el <strong>Chat ID</strong> en cualquiera de estos 3 lugares:</p>
+                                    
+                                    <div class="card mb-3 border-success">
+                                        <div class="card-body p-3">
+                                            <h6 class="text-success mb-1"><i class="bi bi-window"></i> Opción A: Directamente desde esta Web (Recomendada)</h6>
+                                            <p class="small text-muted mb-0">Pega el <strong>Bot Token</strong> y el <strong>Chat ID</strong> en el formulario de la izquierda y haz clic en <strong>"Guardar Configuración"</strong>. Se guardará de forma persistente en <code>data/telegram_config.json</code> sin reiniciar el servidor.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="card mb-3 border-secondary">
+                                        <div class="card-body p-3">
+                                            <h6 class="text-dark mb-1"><i class="bi bi-file-earmark-code"></i> Opción B: En el archivo <code>.env</code></h6>
+                                            <p class="small text-muted mb-2">Crea un archivo llamado <code>.env</code> en la carpeta raíz del proyecto (basado en <code>.env.example</code>):</p>
+                                            <pre class="bg-dark text-white p-2 rounded small mb-0 font-monospace">TELEGRAM_BOT_TOKEN="123456789:ABCdefGHI..."
+TELEGRAM_CHAT_ID="987654321"
+TELEGRAM_NOTIFICACIONES=true</pre>
+                                        </div>
+                                    </div>
+
+                                    <div class="card border-secondary">
+                                        <div class="card-body p-3">
+                                            <h6 class="text-dark mb-1"><i class="bi bi-code-slash"></i> Opción C: En el archivo <code>config.py</code></h6>
+                                            <p class="small text-muted mb-2">En el archivo <code>config.py</code> del proyecto, puedes definir los valores por defecto:</p>
+                                            <pre class="bg-dark text-white p-2 rounded small mb-0 font-monospace">TELEGRAM_BOT_TOKEN = '123456789:ABCdef...'
+TELEGRAM_CHAT_ID = '987654321'</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paso 4: Comandos Interactivos -->
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#paso4">
+                                    <span class="badge bg-info text-dark me-2">Paso 4</span> Comandos disponibles desde la app de Telegram
+                                </button>
+                            </h2>
+                            <div id="paso4" class="accordion-collapse collapse" data-bs-parent="#accordionGuia">
+                                <div class="accordion-body">
+                                    <p class="small text-muted mb-3">Puedes escribirle a tu bot en Telegram los siguientes comandos para consultar datos en vivo:</p>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Comando</th>
+                                                    <th>Respuesta</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><code>/status</code></td>
+                                                    <td>Resumen ejecutivo del sistema (cultivos activos, alertas pendientes, clima).</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>/telemetria</code></td>
+                                                    <td>Telemetría completa, salud IA y sensores del primer cultivo activo.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>/telemetria &lt;id&gt;</code></td>
+                                                    <td>Reporte específico del cultivo indicado por su ID (ej: <code>/telemetria 1</code>).</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>/cultivos</code></td>
+                                                    <td>Lista de todos tus cultivos activos con sus identificadores.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>/clima</code></td>
+                                                    <td>Condición meteorológica exterior actual y consejo de ventilación.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><code>/alertas</code></td>
+                                                    <td>Bandeja de alertas pendientes no leídas.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleTokenVisibility() {
+    const input = document.getElementById('inputBotToken');
+    const icon = document.getElementById('iconTokenEye');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+</script>
+{% endblock %}

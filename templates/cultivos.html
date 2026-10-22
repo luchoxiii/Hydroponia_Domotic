@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block titulo %}Cultivos{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2><i class="bi bi-flower1"></i> Mis Cultivos</h2>
+            <p class="text-muted">Gestiona tus cultivos hidropónicos</p>
+        </div>
+        <a href="{{ url_for('cultivos_agregar') }}" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Nuevo Cultivo
+        </a>
+    </div>
+
+    <!-- Filtro por estado -->
+    <ul class="nav nav-pills mb-3">
+        <li class="nav-item">
+            <a class="nav-link {% if estado == 'ACTIVO' %}active{% endif %}" 
+               href="{{ url_for('cultivos_lista', estado='ACTIVO') }}">🟢 Activos</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if estado == 'PAUSADO' %}active{% endif %}" 
+               href="{{ url_for('cultivos_lista', estado='PAUSADO') }}">⏸️ Pausados</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if estado == 'COSECHADO' %}active{% endif %}" 
+               href="{{ url_for('cultivos_lista', estado='COSECHADO') }}">🌾 Cosechados</a>
+        </li>
+    </ul>
+
+    <!-- Lista de cultivos -->
+    <div class="row g-3">
+        {% for cultivo in cultivos %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 cultivo-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title">{{ cultivo.nombre }}</h5>
+                        {% if cultivo.alertas_no_leidas > 0 %}
+                        <span class="badge bg-danger">{{ cultivo.alertas_no_leidas }} alertas</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted small">
+                        {{ '🌱' if cultivo.especie.categoria == 'PLANTA' else '🍄' }}
+                        {{ cultivo.especie.nombre_comun if cultivo.especie else 'Sin especie' }}
+                    </p>
+                    
+                    <div class="small">
+                        <p class="mb-1">📍 {{ cultivo.ubicacion or 'Sin ubicación' }}</p>
+                        <p class="mb-1">📅 Sembrado: {{ cultivo.fecha_siembra.strftime('%d/%m/%Y') }}</p>
+                        <p class="mb-1">⏱️ {{ cultivo.dias_activo }} días activo</p>
+                    </div>
+                    
+                    {% if cultivo.progreso > 0 %}
+                    <div class="mt-2">
+                        <small class="text-muted">Progreso del ciclo:</small>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-{{ 'success' if cultivo.progreso < 80 else 'warning' if cultivo.progreso < 100 else 'info' }}" 
+                                 style="width: {{ cultivo.progreso }}%"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('cultivo_detalle', cultivo_id=cultivo.id) }}" 
+                       class="btn btn-sm btn-primary">
+                        <i class="bi bi-speedometer2"></i> Ver Dashboard
+                    </a>
+                    <div class="d-flex gap-1">
+                        <a href="{{ url_for('cultivo_exportar_csv', cultivo_id=cultivo.id) }}" 
+                           class="btn btn-sm btn-outline-success" title="Exportar datos a CSV">
+                            <i class="bi bi-file-earmark-arrow-down"></i> CSV
+                        </a>
+                        <form method="POST" action="{{ url_for('cultivo_eliminar', cultivo_id=cultivo.id) }}" class="d-inline"
+                              onsubmit="return confirm('¿Estás seguro de eliminar el cultivo &quot;{{ cultivo.nombre }}&quot; y todo su historial?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar cultivo">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5 text-muted">
+            <i class="bi bi-flower1 display-4"></i>
+            <p class="mt-2">No hay cultivos con estado {{ estado }}.</p>
+            <a href="{{ url_for('cultivos_agregar') }}" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> Agregar Cultivo
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

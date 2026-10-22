@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% block titulo %}Agregar Especie{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <h2><i class="bi bi-plus-circle"></i> Agregar Especie al Catálogo</h2>
+    <p class="text-muted">Define los parámetros ideales para una nueva especie</p>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                <div class="row g-3">
+                    <!-- Información básica -->
+                    <div class="col-12">
+                        <h5><i class="bi bi-info-circle"></i> Información Básica</h5>
+                        <hr>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre Común *</label>
+                        <input type="text" name="nombre_comun" class="form-control" required 
+                               placeholder="Ej: Lechuga Butterhead">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre Científico</label>
+                        <input type="text" name="nombre_cientifico" class="form-control" 
+                               placeholder="Ej: Lactuca sativa">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Categoría *</label>
+                        <select name="categoria" class="form-select" required>
+                            <option value="PLANTA">🌱 Planta</option>
+                            <option value="HONGO">🍄 Hongo</option>
+                        </select>
+                    </div>
+
+                    <!-- Rangos de pH y EC -->
+                    <div class="col-12 mt-4">
+                        <h5><i class="bi bi-sliders"></i> Parámetros de Nutrición</h5>
+                        <hr>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">pH Mínimo</label>
+                        <input type="number" name="ph_min" class="form-control" step="0.1" value="5.5">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">pH Máximo</label>
+                        <input type="number" name="ph_max" class="form-control" step="0.1" value="6.5">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">EC Mínimo (mS/cm)</label>
+                        <input type="number" name="ec_min" class="form-control" step="0.1" value="1.0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">EC Máximo (mS/cm)</label>
+                        <input type="number" name="ec_max" class="form-control" step="0.1" value="2.5">
+                    </div>
+
+                    <!-- Rangos ambientales -->
+                    <div class="col-12 mt-4">
+                        <h5><i class="bi bi-thermometer-half"></i> Parámetros Ambientales</h5>
+                        <hr>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Temp. Mínima (°C)</label>
+                        <input type="number" name="temp_min" class="form-control" step="0.5" value="18">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Temp. Máxima (°C)</label>
+                        <input type="number" name="temp_max" class="form-control" step="0.5" value="28">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Humedad Mín. (%)</label>
+                        <input type="number" name="humedad_min" class="form-control" step="1" value="50">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Humedad Máx. (%)</label>
+                        <input type="number" name="humedad_max" class="form-control" step="1" value="80">
+                    </div>
+
+                    <!-- Luz y ciclo -->
+                    <div class="col-12 mt-4">
+                        <h5><i class="bi bi-sun"></i> Iluminación y Ciclo</h5>
+                        <hr>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Luz Mín. (horas)</label>
+                        <input type="number" name="luz_horas_min" class="form-control" step="0.5" value="8">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Luz Máx. (horas)</label>
+                        <input type="number" name="luz_horas_max" class="form-control" step="0.5" value="16">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ciclo (días)</label>
+                        <input type="number" name="ciclo_dias" class="form-control" 
+                               placeholder="Días hasta cosecha">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">URL Imagen</label>
+                        <input type="url" name="imagen_url" class="form-control" 
+                               placeholder="https://...">
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="col-12">
+                        <label class="form-label">Descripción</label>
+                        <textarea name="descripcion" class="form-control" rows="3" 
+                                  placeholder="Notas sobre el cultivo, requerimientos especiales..."></textarea>
+                    </div>
+
+                    <div class="col-12 mt-3">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Guardar Especie
+                        </button>
+                        <a href="{{ url_for('catalogo_lista') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

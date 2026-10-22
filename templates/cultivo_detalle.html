@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+{% block titulo %}Dashboard - {{ cultivo.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('cultivos_lista') }}">Cultivos</a></li>
+            <li class="breadcrumb-item active">{{ cultivo.nombre }}</li>
+        </ol>
+    </nav>
+
+    <!-- Encabezado del Dashboard Individual -->
+    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <div>
+            <h2>
+                {{ '🌱' if cultivo.especie.categoria == 'PLANTA' else '🍄' }}
+                {{ cultivo.nombre }}
+                <span class="badge bg-{{ 'success' if cultivo.estado == 'ACTIVO' else 'secondary' }} fs-6 align-middle">
+                    {{ cultivo.estado }}
+                </span>
+            </h2>
+            <p class="text-muted mb-1">
+                <strong>Especie:</strong> {{ cultivo.especie.nombre_comun if cultivo.especie else 'Sin especie' }}
+                (<em>{{ cultivo.especie.nombre_cientifico if cultivo.especie else '' }}</em>)
+                | 📍 <strong>Ubicación:</strong> {{ cultivo.ubicacion or 'Sin ubicación' }}
+                | 📅 <strong>Sembrado:</strong> {{ cultivo.fecha_siembra.strftime('%d/%m/%Y') }}
+                | ⏱️ <strong>Días activo:</strong> {{ cultivo.dias_activo }} días
+            </p>
+            {% if cultivo.progreso > 0 %}
+            <div class="d-flex align-items-center gap-2 mt-2" style="max-width: 400px;">
+                <small class="text-muted">Cosecha:</small>
+                <div class="progress flex-grow-1" style="height: 12px;">
+                    <div class="progress-bar bg-success" style="width: {{ cultivo.progreso }}%">{{ cultivo.progreso }}%</div>
+                </div>
+                <small class="fw-bold">{{ cultivo.progreso }}%</small>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Barra de herramientas: CSV, Simulación y Estado -->
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            <!-- Exportar a CSV -->
+            <a href="{{ url_for('cultivo_exportar_csv', cultivo_id=cultivo.id) }}" class="btn btn-outline-success btn-sm" title="Descargar datos en CSV">
+                <i class="bi bi-file-earmark-arrow-down"></i> Exportar CSV
+            </a>
+            <!-- Importar CSV (Modal) -->
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalImportarCSV" title="Cargar datos desde archivo CSV">
+                <i class="bi bi-file-earmark-arrow-up"></i> Cargar CSV
+            </button>
+            <!-- Simuladores -->
+            <form method="POST" action="{{ url_for('simular_cultivo_lecturas', cultivo_id=cultivo.id) }}" class="d-inline">
+                <input type="hidden" name="tipo_simulacion" value="normal">
+                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Simular lecturas dentro de rango">
+                    <i class="bi bi-dice-5"></i> Simular OK
+                </button>
+            </form>
+            <form method="POST" action="{{ url_for('simular_cultivo_lecturas', cultivo_id=cultivo.id) }}" class="d-inline">
+                <input type="hidden" name="tipo_simulacion" value="alerta">
+                <button type="submit" class="btn btn-outline-danger btn-sm" title="Simular anomalía para disparar alerta">
+                    <i class="bi bi-exclamation-triangle"></i> Probar Alerta
+                </button>
+            </form>
+            <!-- Estados -->
+            <form method="POST" action="{{ url_for('cambiar_estado_cultivo', cultivo_id=cultivo.id) }}" class="d-inline">
+                {% if cultivo.estado == 'ACTIVO' %}
+                <button name="estado" value="PAUSADO" class="btn btn-warning btn-sm">⏸️ Pausar</button>
+                <button name="estado" value="COSECHADO" class="btn btn-info btn-sm">🌾 Cosechar</button>
+                {% elif cultivo.estado == 'PAUSADO' %}
+                <button name="estado" value="ACTIVO" class="btn btn-success btn-sm">▶️ Reactivar</button>
+                {% endif %}
+            </form>
+            <!-- Eliminar Cultivo -->
+            <form method="POST" action="{{ url_for('cultivo_eliminar', cultivo_id=cultivo.id) }}" class="d-inline"
+                  onsubmit="return confirm('¿Estás seguro de que deseas eliminar permanentemente el cultivo &quot;{{ cultivo.nombre }}&quot;? Esta acción borrará todas sus lecturas de sensores y alertas asociadas.')">
+                <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar permanentemente este cultivo">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FILA SUPERIOR: PANEL DE MACHINE LEARNING + CLIMA EXTERNO -->
+    <div class="row g-3 mb-4">
+        <!-- 🧠 TARJETA MACHINE LEARNING -->
+        <div class="col-lg-7">
+            <div class="card h-100 border-primary shadow-sm">
+                <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-primary">
+                        <i class="bi bi-cpu"></i> Diagnóstico con Inteligencia Artificial & ML
+                    </span>
+                    <form method="POST" action="{{ url_for('cultivo_reentrenar_ml', cultivo_id=cultivo.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-outline-primary py-0" title="Reentrenar modelo Random Forest con nuevos datos">
+                            <i class="bi bi-arrow-repeat"></i> Reentrenar ML
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-5 text-center border-end">
+                            <small class="text-muted d-block text-uppercase fw-bold">Índice de Salud Agronómica</small>
+                            <div class="display-4 fw-bold text-{{ 'success' if ml.score_salud >= 75 else 'warning' if ml.score_salud >= 50 else 'danger' }}">
+                                {{ ml.score_salud }}%
+                            </div>
+                            <span class="badge bg-{{ ml.badge_color }} fs-6">
+                                {{ ml.icono }} {{ ml.diagnostico_titulo }}
+                            </span>
+                        </div>
+                        <div class="col-md-7">
+                            <h6 class="text-muted small mb-1"><i class="bi bi-lightbulb"></i> Recomendación Agronómica por IA:</h6>
+                            <p class="small mb-2 fw-medium text-dark bg-light p-2 rounded border">
+                                {{ ml.recomendacion_ia }}
+                            </p>
+                            
+                            <!-- Probabilidades de Clases predichas -->
+                            <small class="text-muted d-block mb-1">Confianza de Clasificación:</small>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for clase, prob in ml.probabilidades.items() %}
+                                <span class="badge bg-secondary bg-opacity-25 text-dark small" style="font-size: 0.75rem;">
+                                    {{ clase.replace('_', ' ') }}: <strong>{{ prob }}%</strong>
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if ml.factores_criticos %}
+                    <div class="alert alert-warning py-1 px-2 mt-3 mb-0 small">
+                        <strong><i class="bi bi-exclamation-circle"></i> Factores de riesgo detectados:</strong>
+                        <ul class="mb-0 ps-3">
+                            {% for f in ml.factores_criticos %}
+                            <li>{{ f }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 🌤️ TARJETA CLIMA EXTERNO & IMPACTO AGROECOLÓGICO -->
+        <div class="col-lg-5">
+            <div class="card h-100 border-info shadow-sm">
+                <div class="card-header bg-info bg-opacity-10 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-info text-dark">
+                        <i class="bi bi-cloud-sun"></i> Clima Exterior de Referencia
+                    </span>
+                    <span class="badge bg-info text-dark">{{ clima.ciudad }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h5 class="mb-0">{{ clima.condicion }}</h5>
+                            <small class="text-muted">Fuente: {{ clima.fuente }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="fs-4 fw-bold text-primary">{{ clima.temp_externa }}°C</span>
+                            <br><small class="text-muted">Humedad: {{ clima.humedad_externa }}%</small>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 text-center my-2 bg-light p-2 rounded">
+                        <div class="col-6">
+                            <small class="text-muted d-block">Delta Temperatura</small>
+                            <span class="fw-bold {{ 'text-danger' if analisis_clima.delta_temp > 5 else 'text-primary' }}">
+                                {{ '▲' if analisis_clima.delta_temp > 0 else '▼' }} {{ analisis_clima.delta_temp }}°C
+                            </span>
+                            <small class="d-block text-muted" style="font-size: 0.7rem;">(Interior - Exterior)</small>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Delta Humedad</small>
+                            <span class="fw-bold text-info">
+                                {{ '▲' if analisis_clima.delta_hum > 0 else '▼' }} {{ analisis_clima.delta_hum }}%
+                            </span>
+                            <small class="d-block text-muted" style="font-size: 0.7rem;">(Interior - Exterior)</small>
+                        </div>
+                    </div>
+
+                    <div class="small mt-2">
+                        <strong><i class="bi bi-fan"></i> Estrategia de Ventilación:</strong>
+                        <p class="text-muted mb-0">{{ analisis_clima.consejos[0] if analisis_clima.consejos else 'Microclima balanceado.' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARJETAS DE SENSORES EN TIEMPO REAL -->
+    <h5 class="mb-2"><i class="bi bi-activity"></i> Estado Actual de Sensores del Cultivo</h5>
+    <div class="row g-3 mb-4">
+        {% for tipo, info in resumen.items() %}
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card text-center sensor-card {{ 'border-success' if info.en_rango else 'border-danger' }} shadow-sm">
+                <div class="card-body py-2">
+                    <div class="fs-3">{{ info.icono }}</div>
+                    <small class="text-muted fw-bold">{{ info.nombre }}</small>
+                    <h4 class="mb-0 {{ 'text-success' if info.en_rango else 'text-danger' }}">
+                        {{ info.valor }}{{ info.unidad }}
+                    </h4>
+                    <small class="{{ 'text-success' if info.en_rango else 'text-danger' }} fw-medium">
+                        {{ '✓ En rango' if info.en_rango else '✗ Fuera de rango' }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% if not resumen %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> No hay lecturas de sensores aún. Usa el botón "Simular OK" arriba, sube un CSV o registra una lectura manual abajo.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- FILA INFERIOR: FORMULARIO, HISTORIAL Y GRÁFICO -->
+    <div class="row g-3">
+        <!-- Columna Izquierda: Registro Manual y Alertas -->
+        <div class="col-lg-4">
+            <!-- Formulario manual -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-plus-circle"></i> Registrar Lectura Manual</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('registrar_lectura_sensor', cultivo_id=cultivo.id) }}">
+                        <div class="mb-3">
+                            <label class="form-label small">Tipo de Sensor</label>
+                            <select name="tipo" class="form-select form-select-sm" required>
+                                <option value="PH">🧪 pH</option>
+                                <option value="EC">⚡ Conductividad (EC)</option>
+                                <option value="TEMPERATURA">🌡️ Temperatura</option>
+                                <option value="HUMEDAD">💧 Humedad</option>
+                                <option value="NIVEL_AGUA">🌊 Nivel de Agua</option>
+                                <option value="LUZ">☀️ Luz</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Valor Medido</label>
+                            <input type="number" name="valor" class="form-control form-control-sm" step="0.01" required placeholder="Ej: 6.2">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-save"></i> Guardar Lectura
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alertas del Cultivo -->
+            {% if alertas_cultivo %}
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-bell text-danger"></i> Alertas Recientes</h6>
+                    <span class="badge bg-danger">{{ alertas_cultivo|length }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 280px; overflow-y: auto;">
+                        {% for alerta in alertas_cultivo[:10] %}
+                        <div class="list-group-item list-group-item-{{ alerta.nivel_info.color }} small {% if alerta.leida %}opacity-50{% endif %}">
+                            <strong>{{ alerta.nivel_info.icono }} {{ alerta.tipo }}</strong>
+                            <p class="mb-0">{{ alerta.mensaje }}</p>
+                            <small class="text-muted">{{ alerta.created_at.strftime('%d/%m %H:%M') }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Notas -->
+            {% if cultivo.notas %}
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="bi bi-sticky"></i> Bitácora / Notas</h6>
+                </div>
+                <div class="card-body small">
+                    <p class="mb-0 text-muted">{{ cultivo.notas }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Columna Derecha: Gráfico Temporal e Historial de Mediciones -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-graph-up text-primary"></i> Tendencias y Evolución Temporal</h6>
+                    <small class="text-muted">Últimas 168 horas</small>
+                </div>
+                <div class="card-body">
+                    <canvas id="sensorChart" height="220"></canvas>
+                </div>
+            </div>
+
+            <!-- Tabla de lecturas recientes -->
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="bi bi-table"></i> Historial Reciente de Mediciones</h6>
+                    <a href="{{ url_for('cultivo_exportar_csv', cultivo_id=cultivo.id) }}" class="btn btn-sm btn-outline-success py-0">
+                        <i class="bi bi-download"></i> Descargar CSV
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if lecturas %}
+                    <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Fecha y Hora</th>
+                                    <th>Sensor</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lectura in lecturas %}
+                                <tr>
+                                    <td>{{ lectura.timestamp.strftime('%d/%m/%Y %H:%M:%S') }}</td>
+                                    <td>{{ lectura.tipo_info.icono }} {{ lectura.tipo_info.nombre }}</td>
+                                    <td><strong>{{ lectura.valor }}</strong> {{ lectura.unidad or lectura.tipo_info.unidad }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-4 mb-0">No hay lecturas registradas para este cultivo.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PARA CARGAR / IMPORTAR CSV -->
+<div class="modal fade" id="modalImportarCSV" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('cultivo_importar_csv', cultivo_id=cultivo.id) }}" enctype="multipart/form-data">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-file-earmark-arrow-up"></i> Cargar Datos desde CSV</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-2">
+                        Sube un archivo CSV con lecturas previas o registradas por un datalogger externo. 
+                        El sistema las procesará y evaluará automáticamente las alertas contra los rangos de la especie.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Seleccionar Archivo CSV (.csv):</label>
+                        <input type="file" name="archivo_csv" class="form-control" accept=".csv,text/csv" required>
+                    </div>
+
+                    <div class="bg-light p-2 rounded small border">
+                        <strong>Formatos compatibles soportados:</strong>
+                        <ul class="mb-0 ps-3">
+                            <li><strong>Formato Ancho:</strong> <code>timestamp, ph, ec, temperatura, humedad, nivel_agua</code></li>
+                            <li><strong>Formato Largo:</strong> <code>timestamp, tipo, valor</code></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Procesar e Importar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Gráfico de lecturas temporales
+const ctx = document.getElementById('sensorChart');
+if (ctx) {
+    fetch(`/api/cultivo/{{ cultivo.id }}/lecturas?horas=168`)
+        .then(r => r.json())
+        .then(data => {
+            if (!data || data.length === 0) {
+                ctx.parentElement.innerHTML = '<p class="text-muted text-center py-4">No hay datos suficientes para graficar todavía. Registra lecturas o simula arriba.</p>';
+                return;
+            }
+
+            const grouped = {};
+            const colors = {
+                'PH': '#ffc107',
+                'EC': '#17a2b8',
+                'TEMPERATURA': '#dc3545',
+                'HUMEDAD': '#0d6efd',
+                'NIVEL_AGUA': '#198754',
+                'LUZ': '#fd7e14'
+            };
+
+            data.forEach(d => {
+                if (!grouped[d.tipo_nombre]) {
+                    grouped[d.tipo_nombre] = { labels: [], values: [], color: colors[d.tipo] || '#6c757d' };
+                }
+                grouped[d.tipo_nombre].labels.push(new Date(d.timestamp).toLocaleString('es', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }));
+                grouped[d.tipo_nombre].values.push(d.valor);
+            });
+
+            const datasets = Object.entries(grouped).map(([nombre, g]) => ({
+                label: nombre,
+                data: g.values,
+                borderColor: g.color,
+                backgroundColor: g.color + '20',
+                tension: 0.3,
+                fill: false
+            }));
+
+            const longestKey = Object.keys(grouped).reduce((a, b) => 
+                grouped[a].labels.length > grouped[b].labels.length ? a : b, Object.keys(grouped)[0]);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: grouped[longestKey]?.labels || [],
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'top' } },
+                    scales: { 
+                        x: { display: true, ticks: { maxTicksLimit: 8 } }
+                    }
+                }
+            });
+        })
+        .catch(() => {
+            ctx.parentElement.innerHTML = '<p class="text-muted text-center py-4">Error al cargar gráfico de lecturas.</p>';
+        });
+}
+</script>
+{% endblock %}

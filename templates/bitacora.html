@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block titulo %}Bitácora Cifrada de Auditoría{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2><i class="bi bi-shield-lock-fill text-primary"></i> Bitácora Cifrada de Auditoría</h2>
+            <p class="text-muted">Registro inmutable y cifrado (AES-256 + HMAC-SHA256) de todos los eventos del sistema</p>
+        </div>
+        <div class="d-flex gap-2">
+            <form method="POST" action="{{ url_for('bitacora_verificar') }}" class="d-inline">
+                <button type="submit" class="btn btn-outline-success">
+                    <i class="bi bi-check2-circle"></i> Auditar Cadena Criptográfica
+                </button>
+            </form>
+            <a href="{{ url_for('bitacora_descargar') }}" class="btn btn-outline-primary">
+                <i class="bi bi-download"></i> Descargar Archivo Cifrado (.enc)
+            </a>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Estado Criptográfico -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card border-primary">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted">Total de Registros Cifrados</h6>
+                    <h2 class="card-title mb-0">{{ stats.total_eventos }}</h2>
+                    <small class="text-muted">Archivo: {{ stats.tamano_kb }} KB</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card stat-card {% if auditoria.integra %}border-success{% else %}border-danger{% endif %}">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted">Integridad de Cadena de Custodia</h6>
+                    <div class="d-flex align-items-center mt-1">
+                        {% if auditoria.integra %}
+                        <i class="bi bi-shield-check display-6 text-success me-2"></i>
+                        <div>
+                            <h5 class="mb-0 text-success">Cadena Íntegra y Auténtica</h5>
+                            <small class="text-muted">{{ auditoria.mensaje }}</small>
+                        </div>
+                        {% else %}
+                        <i class="bi bi-shield-slash display-6 text-danger me-2"></i>
+                        <div>
+                            <h5 class="mb-0 text-danger">¡Alerta de Manipulación Detectada!</h5>
+                            <small class="text-danger">{{ auditoria.motivo }} (Línea {{ auditoria.linea_corrupta }})</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card border-info">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted">Algoritmo & Seguridad</h6>
+                    <h5 class="card-title mb-0 fs-5 text-info">Fernet (AES-128-CBC + HMAC)</h5>
+                    <small class="text-muted">KDF: PBKDF2-HMAC-SHA256 (100k iteraciones)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros de Eventos -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Filtrar por Categoría</label>
+                    <select name="categoria" class="form-select">
+                        <option value="">Todas las categorías</option>
+                        <option value="SISTEMA" {% if cat_filtro == 'SISTEMA' %}selected{% endif %}>💻 SISTEMA</option>
+                        <option value="IOT" {% if cat_filtro == 'IOT' %}selected{% endif %}>🔌 IOT / SENSORES</option>
+                        <option value="AGRONOMICO" {% if cat_filtro == 'AGRONOMICO' %}selected{% endif %}>🌱 AGRONÓMICO</option>
+                        <option value="NOTIFICACION" {% if cat_filtro == 'NOTIFICACION' %}selected{% endif %}>📢 NOTIFICACIÓN</option>
+                        <option value="SEGURIDAD" {% if cat_filtro == 'SEGURIDAD' %}selected{% endif %}>🔒 SEGURIDAD</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-filter"></i> Filtrar Bitácora
+                    </button>
+                </div>
+                {% if cat_filtro %}
+                <div class="col-md-2">
+                    <a href="{{ url_for('bitacora_panel') }}" class="btn btn-outline-secondary w-100">Limpiar</a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Eventos Descifrados en Vivo -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-journal-text"></i> Eventos Descifrados en Tiempo Real (Últimos {{ eventos|length }})</h5>
+            <small class="text-muted">Los datos en reposo se mantienen 100% cifrados en disco</small>
+        </div>
+        <div class="card-body p-0">
+            {% if eventos %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 70px;">#Seq</th>
+                            <th style="width: 170px;">Fecha y Hora</th>
+                            <th style="width: 120px;">Categoría</th>
+                            <th style="width: 180px;">Tipo de Evento</th>
+                            <th>Detalle / Carga del Evento</th>
+                            <th style="width: 110px;">Hash Bloque</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ev in eventos %}
+                        <tr>
+                            <td><code>#{{ ev.seq }}</code></td>
+                            <td><small>{{ ev.timestamp[:19].replace('T', ' ') }}</small></td>
+                            <td>
+                                <span class="badge bg-{% if ev.categoria == 'IOT' %}info{% elif ev.categoria == 'AGRONOMICO' %}success{% elif ev.categoria == 'SEGURIDAD' %}warning text-dark{% elif ev.categoria == 'NOTIFICACION' %}primary{% else %}secondary{% endif %}">
+                                    {{ ev.categoria }}
+                                </span>
+                            </td>
+                            <td>
+                                <strong>{{ ev.tipo }}</strong>
+                                {% if ev.severidad == 'CRITICA' %}
+                                <span class="badge bg-danger ms-1">CRÍTICA</span>
+                                {% elif ev.severidad == 'ADVERTENCIA' %}
+                                <span class="badge bg-warning text-dark ms-1">ADVERTENCIA</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <pre class="mb-0 small bg-light p-2 rounded" style="max-height: 80px; overflow-y: auto;"><code>{{ ev.datos | tojson(indent=2) }}</code></pre>
+                            </td>
+                            <td>
+                                <span class="badge bg-dark font-monospace" title="{{ ev.entry_hash }}">
+                                    {{ ev.entry_hash[:8] }}...
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-shield-lock display-4"></i>
+                <p class="mt-2">No hay eventos registrados en la bitácora todavía.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

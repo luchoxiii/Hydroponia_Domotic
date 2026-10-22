@@ -1,0 +1,37 @@
+# ==============================================================================
+# 🌱 HydroControl - Servicio Systemd para Linux (Ubuntu, Debian, Raspberry Pi OS)
+# ==============================================================================
+# Instalación:
+#   sudo cp hydrocontrol.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable hydrocontrol
+#   sudo systemctl start hydrocontrol
+#   sudo systemctl status hydrocontrol
+
+[Unit]
+Description=HydroControl - Servidor de Producción WSGI para Hidroponía e IA
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/hydrocontrol
+Environment="PATH=/home/pi/hydrocontrol/.venv/bin:/usr/local/bin:/usr/bin"
+Environment="FLASK_ENV=production"
+Environment="DEBUG=false"
+Environment="WAITRESS_THREADS=8"
+ExecStart=/home/pi/hydrocontrol/.venv/bin/python /home/pi/hydrocontrol/wsgi.py
+Restart=always
+RestartSec=5s
+KillSignal=SIGQUIT
+StandardOutput=append:/home/pi/hydrocontrol/logs/systemd_stdout.log
+StandardError=append:/home/pi/hydrocontrol/logs/systemd_stderr.log
+
+# Medidas de endurecimiento de seguridad en Linux
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

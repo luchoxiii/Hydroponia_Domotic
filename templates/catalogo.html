@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block titulo %}Catálogo{% endblock %}
+
+{% block contenido %}
+<div class="mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2><i class="bi bi-book"></i> Catálogo de Especies</h2>
+            <p class="text-muted">Plantas y hongos disponibles para cultivo hidropónico</p>
+        </div>
+        <a href="{{ url_for('catalogo_agregar') }}" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> Agregar Especie
+        </a>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="GET" class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="buscar" class="form-control" 
+                           placeholder="Nombre común o científico..." value="{{ buscar }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Categoría</label>
+                    <select name="categoria" class="form-select">
+                        <option value="">Todas</option>
+                        <option value="PLANTA" {% if categoria == 'PLANTA' %}selected{% endif %}>🌱 Plantas</option>
+                        <option value="HONGO" {% if categoria == 'HONGO' %}selected{% endif %}>🍄 Hongos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Grid de especies -->
+    <div class="row g-3">
+        {% for especie in especies %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 especie-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-{{ 'success' if especie.categoria == 'PLANTA' else 'purple' }} me-2">
+                            {{ '🌱' if especie.categoria == 'PLANTA' else '🍄' }} {{ especie.categoria }}
+                        </span>
+                    </div>
+                    <h5 class="card-title">{{ especie.nombre_comun }}</h5>
+                    <p class="card-text text-muted fst-italic small">{{ especie.nombre_cientifico or 'Sin nombre científico' }}</p>
+                    
+                    <div class="row small mt-3">
+                        <div class="col-6">
+                            <span class="text-muted">🧪 pH:</span> {{ especie.ph_min }} - {{ especie.ph_max }}
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted">⚡ EC:</span> {{ especie.ec_min }} - {{ especie.ec_max }}
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted">🌡️ Temp:</span> {{ especie.temp_min }}° - {{ especie.temp_max }}°
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted">💧 Hum:</span> {{ especie.humedad_min }}% - {{ especie.humedad_max }}%
+                        </div>
+                    </div>
+                    
+                    {% if especie.ciclo_dias %}
+                    <p class="small mt-2 mb-0">⏱️ Ciclo: {{ especie.ciclo_dias }} días</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('catalogo_detalle', especie_id=especie.id) }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Ver detalles
+                        </a>
+                        <a href="{{ url_for('cultivos_agregar') }}?especie_id={{ especie.id }}" 
+                           class="btn btn-sm btn-success">
+                            <i class="bi bi-plus-lg"></i> Cultivar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5 text-muted">
+            <i class="bi bi-book display-4"></i>
+            <p class="mt-2">No se encontraron especies.</p>
+            <a href="{{ url_for('catalogo_agregar') }}" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> Agregar primera especie
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
