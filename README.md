@@ -5,6 +5,9 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/luchoxiii/Hydroponia_Domotic"><img src="https://img.shields.io/badge/GitHub-Hydroponia__Domotic-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Repository"></a>
+  <a href="https://github.com/luchoxiii"><img src="https://img.shields.io/badge/Author-luchoxiii-0A66C2?style=for-the-badge&logo=github&logoColor=white" alt="Author luchoxiii"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge&logo=open-source-initiative&logoColor=white" alt="License MIT"></a>
   <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/Flask-3.1.0-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask 3.1.0">
   <img src="https://img.shields.io/badge/Production-Waitress%20WSGI-success?style=for-the-badge&logo=server&logoColor=white" alt="Waitress WSGI">
@@ -17,6 +20,10 @@
   <img src="https://img.shields.io/badge/Bit%C3%A1cora-AES--256%20Cifrada-darkblue?style=for-the-badge&logo=lock&logoColor=white" alt="Bitácora Cifrada">
   <img src="https://img.shields.io/badge/ML%20Center-What--If%20Lab-purple?style=for-the-badge&logo=openai&logoColor=white" alt="ML Center & What-If">
   <img src="https://img.shields.io/badge/Tests-114%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="114 Pytest Passed">
+</p>
+
+<p align="center">
+  🌐 <strong>Repositorio Oficial:</strong> <a href="https://github.com/luchoxiii/Hydroponia_Domotic">github.com/luchoxiii/Hydroponia_Domotic</a> &nbsp;|&nbsp; 👤 <strong>Autor &amp; Titular de Derechos:</strong> <a href="https://github.com/luchoxiii">luchoxiii</a>
 </p>
 
 ---
@@ -47,6 +54,7 @@
     - [4. Reverse Proxy Nginx & Rate Limiting](#4-reverse-proxy-nginx--rate-limiting)
     - [5. Sondas de Salud (Healthcheck) y Logging Rotativo](#5-sondas-de-salud-healthcheck-y-logging-rotativo)
   - [📁 Estructura del Proyecto](#-estructura-del-proyecto)
+  - [👤 Autor y Titularidad de Derechos](#-autor-y-titularidad-de-derechos)
   - [📄 Licencia](#-licencia)
 
 ---
@@ -640,6 +648,29 @@ hydroponia/
 
 ---
 
+## 👤 Autor y Titularidad de Derechos
+
+* **Autor y Creador**: **luchoxiii**
+  * Perfil en GitHub: [@luchoxiii](https://github.com/luchoxiii)
+  * Repositorio Oficial: [https://github.com/luchoxiii/Hydroponia_Domotic](https://github.com/luchoxiii/Hydroponia_Domotic)
+* **Derechos y Propiedad Intelectual**: Todos los derechos de autor, diseño de arquitectura de software y hardware, modelos predictivos de Machine Learning, esquemas relacionales de bases de datos, protocolos de telemetría IoT, firmware para microcontroladores (ESP32 / Arduino), suite de pruebas y documentación técnica pertenecen exclusivamente a **luchoxiii**.
+
+Para clonar e iniciar este proyecto desde el repositorio oficial:
+
+```bash
+git clone https://github.com/luchoxiii/Hydroponia_Domotic.git
+cd Hydroponia_Domotic
+```
+
+---
+
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
+Este proyecto está protegido por derechos de autor y distribuido bajo los términos de la **Licencia MIT**.
+
+```text
+Copyright (c) 2024-2026 luchoxiii (https://github.com/luchoxiii/Hydroponia_Domotic)
+Todos los derechos reservados.
+```
+
+Consulta el archivo [`LICENSE`](LICENSE) para conocer el texto legal y condiciones completas.
