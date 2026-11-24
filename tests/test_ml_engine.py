@@ -1,4 +1,5 @@
 """Pruebas para el motor de Machine Learning y diagnóstico de salud."""
+from models import db
 from models.cultivo import Cultivo
 from services import ml_engine, clima
 
@@ -14,7 +15,7 @@ def test_entrenar_y_cargar_modelo_ml():
 def test_evaluar_salud_cultivo_optimo(app, cultivo_planta):
     """Cultivo con valores equilibrados debe obtener puntaje alto y diagnóstico óptimo."""
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         resumen = {
             'PH': {'valor': 6.0, 'en_rango': True},
             'EC': {'valor': 1.1, 'en_rango': True},
@@ -37,7 +38,7 @@ def test_evaluar_salud_cultivo_optimo(app, cultivo_planta):
 def test_evaluar_salud_cultivo_estres_hidrico_o_nutricional(app, cultivo_planta):
     """Cultivo con agua casi vacía y pH alterado debe ser penalizado por la IA."""
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         resumen = {
             'PH': {'valor': 3.8, 'en_rango': False},
             'EC': {'valor': 4.5, 'en_rango': False},
@@ -89,7 +90,7 @@ def test_simular_prediccion_what_if():
 def test_estimar_gdd_y_cosecha(app, cultivo_planta):
     """Verifica el cálculo de Growing Degree Days y días restantes para cosecha."""
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         gdd = ml_engine.estimar_gdd_y_cosecha(cultivo, temp_media=22.0)
         assert 'gdd_acumulado' in gdd
         assert 'gdd_objetivo' in gdd

@@ -8,7 +8,7 @@ from services.alertas import verificar_lectura
 
 def registrar_lectura(cultivo_id, tipo, valor, unidad=None):
     """Registra una nueva lectura de sensor y verifica alertas."""
-    cultivo = Cultivo.query.get_or_404(cultivo_id)
+    cultivo = db.get_or_404(Cultivo, cultivo_id)
     
     lectura = LecturaSensor(
         cultivo_id=cultivo_id,
@@ -29,7 +29,7 @@ def registrar_lectura(cultivo_id, tipo, valor, unidad=None):
 
 def obtener_lecturas(cultivo_id, tipo=None, horas=24):
     """Obtiene las lecturas recientes de un cultivo."""
-    desde = datetime.now(timezone.utc) - timedelta(hours=horas)
+    desde = (datetime.now(timezone.utc) - timedelta(hours=horas)).replace(tzinfo=None)
     query = LecturaSensor.query.filter(
         LecturaSensor.cultivo_id == cultivo_id,
         LecturaSensor.timestamp >= desde
@@ -41,7 +41,7 @@ def obtener_lecturas(cultivo_id, tipo=None, horas=24):
 
 def obtener_resumen_cultivo(cultivo_id):
     """Obtiene un resumen del estado actual de un cultivo."""
-    cultivo = Cultivo.query.get_or_404(cultivo_id)
+    cultivo = db.get_or_404(Cultivo, cultivo_id)
     resumen = {}
     
     for tipo in LecturaSensor.TIPOS_SENSOR:
@@ -81,7 +81,7 @@ def obtener_resumen_cultivo(cultivo_id):
 def simular_lecturas(cultivo_id, anomalas=False):
     """Genera lecturas simuladas para todos los sensores de un cultivo."""
     import random
-    cultivo = Cultivo.query.get_or_404(cultivo_id)
+    cultivo = db.get_or_404(Cultivo, cultivo_id)
     esp = cultivo.especie
     alertas_todas = []
 
@@ -167,7 +167,7 @@ def eliminar_cultivo(cultivo_id):
     from models.lectura_sensor import LecturaSensor
     from models.alerta import Alerta
 
-    cultivo = Cultivo.query.get_or_404(cultivo_id)
+    cultivo = db.get_or_404(Cultivo, cultivo_id)
     nombre = cultivo.nombre
 
     # 1. Desvincular dispositivos IoT asociados para preservar el hardware

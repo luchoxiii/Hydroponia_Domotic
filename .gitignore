@@ -1,0 +1,13 @@
+# Entornos virtuales
+.venv/
+venv/
+ENV/
+
+# Bytecode y cachés de Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Variables de entorno privadas
+.env

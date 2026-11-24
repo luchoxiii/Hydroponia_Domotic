@@ -474,9 +474,9 @@ function actualizarSnippetsKey(key) {
     const testInput = document.getElementById('testApiKey');
     if (testInput) testInput.value = key;
 
-    document.querySelectorAll('pre code').forEach(codeBlock => {
+    document.querySelectorAll('pre code, code.d-block').forEach(codeBlock => {
         let text = codeBlock.textContent;
-        text = text.replace(/hydro_[a-f0-9]{32}/g, key);
+        text = text.replace(/hydro_[a-zA-Z0-9_]{10,40}/g, key);
         text = text.replace(/TU_API_KEY/g, key);
         codeBlock.textContent = text;
     });

@@ -51,6 +51,8 @@ def obtener_clima_actual(lat=LATITUD_DEFAULT, lon=LONGITUD_DEFAULT, forzar=False
                 'sensacion_termica': round(sensacion, 1),
                 'viento_kmh': round(viento, 1),
                 'condicion': condicion,
+                'descripcion': condicion,
+                'consejo_agronomico': 'Mantener ventilación controlada y monitorear el diferencial térmico con el interior.',
                 'codigo_wmo': codigo_clima,
                 'ciudad': CIUDAD_DEFAULT,
                 'timestamp': datetime.now(timezone.utc).isoformat()
@@ -69,6 +71,8 @@ def obtener_clima_actual(lat=LATITUD_DEFAULT, lon=LONGITUD_DEFAULT, forzar=False
         'sensacion_termica': 21.0,
         'viento_kmh': 10.0,
         'condicion': 'Despejado / Agradable',
+        'descripcion': 'Despejado / Agradable',
+        'consejo_agronomico': 'Condiciones exteriores templadas favorables para renovación moderada de aire.',
         'codigo_wmo': 0,
         'ciudad': CIUDAD_DEFAULT,
         'timestamp': datetime.now(timezone.utc).isoformat()

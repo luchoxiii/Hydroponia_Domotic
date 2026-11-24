@@ -41,7 +41,7 @@ def test_estres_concurrencia_telemetria_iot(mock_post, app, cultivo_planta):
 
     # Crear dispositivos para la prueba
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         dispositivos_keys = []
         for i in range(5):
             disp = Dispositivo(
@@ -185,7 +185,7 @@ def test_estres_inferencia_machine_learning(app, cultivo_planta):
     extremas de microclima y clima exterior. Mide latencia promedio (< 15ms por predicción).
     """
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
 
         latencias = []
         for i in range(300):
@@ -228,7 +228,7 @@ def test_robustez_valores_sensores_extremos(app, cultivo_planta):
     - Humedad negativa o 200%
     """
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         valores_extremos = [
             ('PH', -5.0),
             ('PH', 25.0),

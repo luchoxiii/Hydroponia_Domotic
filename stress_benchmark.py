@@ -136,7 +136,7 @@ def benchmark_inferencia_ml(app, cultivo_id, iteraciones=200):
 
     latencias = []
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_id)
+        cultivo = db.session.get(Cultivo, cultivo_id)
 
         for i in range(iteraciones):
             resumen = {

@@ -44,7 +44,7 @@ def buscar_especies(termino=None, categoria=None):
 
 def obtener_especie(especie_id):
     """Obtiene una especie por su ID."""
-    return Especie.query.get_or_404(especie_id)
+    return db.get_or_404(Especie, especie_id)
 
 
 def crear_especie(datos):
@@ -73,7 +73,12 @@ def crear_especie(datos):
 
 
 def eliminar_especie(especie_id):
-    """Elimina una especie del catálogo."""
-    especie = Especie.query.get_or_404(especie_id)
+    """Elimina una especie del catálogo verificando que no tenga cultivos asociados."""
+    especie = db.get_or_404(Especie, especie_id)
+    if especie.cultivos and len(especie.cultivos) > 0:
+        raise ValueError(
+            f'No se puede eliminar la especie "{especie.nombre_comun}" porque tiene '
+            f'{len(especie.cultivos)} cultivo(s) asociado(s). Elimina primero esos cultivos.'
+        )
     db.session.delete(especie)
     db.session.commit()

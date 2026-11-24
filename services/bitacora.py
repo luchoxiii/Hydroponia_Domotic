@@ -27,6 +27,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from config import BASEDIR, Config
 
 _BITACORA_LOCK = threading.Lock()
+_FERNET_CACHE = {}
 
 
 def _ruta_bitacora():
@@ -56,6 +57,10 @@ def _obtener_fernet(clave_maestra=None):
         with open(ruta_salt, 'rb') as f:
             salt = f.read()
 
+    cache_key = (secret, salt)
+    if cache_key in _FERNET_CACHE:
+        return _FERNET_CACHE[cache_key]
+
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -63,7 +68,9 @@ def _obtener_fernet(clave_maestra=None):
         iterations=100000
     )
     key_derived = base64.urlsafe_b64encode(kdf.derive(secret))
-    return Fernet(key_derived)
+    fernet_inst = Fernet(key_derived)
+    _FERNET_CACHE[cache_key] = fernet_inst
+    return fernet_inst
 
 
 def _obtener_ultimo_hash(ruta_archivo):

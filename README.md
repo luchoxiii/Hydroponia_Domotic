@@ -1,6 +1,14 @@
 # 🌱 HydroControl - Sistema Integral de Control, IA y Telemetría para Hidroponía
 
 <p align="center">
+  🌍 <strong>Idioma / Language / Langue / Idioma:</strong><br>
+  <a href="README.md"><img src="https://img.shields.io/badge/🇪🇸_Español-Activo-198754?style=for-the-badge" alt="Español"></a>
+  <a href="README.en.md"><img src="https://img.shields.io/badge/🇺🇸_English-Read-0d6efd?style=for-the-badge" alt="English"></a>
+  <a href="README.fr.md"><img src="https://img.shields.io/badge/🇫🇷_Français-Lire-6f42c1?style=for-the-badge" alt="Français"></a>
+  <a href="README.pt.md"><img src="https://img.shields.io/badge/🇧🇷_Português-Ler-fd7e14?style=for-the-badge" alt="Português"></a>
+</p>
+
+<p align="center">
   <img src="docs/img/hero_hydrocontrol.png" alt="HydroControl Smart Hydroponics &amp; Mushrooms" width="100%" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.25);">
 </p>
 
@@ -10,6 +18,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge&logo=open-source-initiative&logoColor=white" alt="License MIT"></a>
   <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/Flask-3.1.0-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask 3.1.0">
+  <img src="https://img.shields.io/badge/i18n-ES%20%7C%20EN%20%7C%20FR%20%7C%20PT-0dcaf0?style=for-the-badge&logo=googletranslate&logoColor=white" alt="i18n Multilingüe">
   <img src="https://img.shields.io/badge/Production-Waitress%20WSGI-success?style=for-the-badge&logo=server&logoColor=white" alt="Waitress WSGI">
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Ready">
   <img src="https://img.shields.io/badge/SQLite-WAL%20Mode-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite WAL">
@@ -19,7 +28,7 @@
   <img src="https://img.shields.io/badge/Discord-Rich%20Embeds-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord Webhook">
   <img src="https://img.shields.io/badge/Bit%C3%A1cora-AES--256%20Cifrada-darkblue?style=for-the-badge&logo=lock&logoColor=white" alt="Bitácora Cifrada">
   <img src="https://img.shields.io/badge/ML%20Center-What--If%20Lab-purple?style=for-the-badge&logo=openai&logoColor=white" alt="ML Center & What-If">
-  <img src="https://img.shields.io/badge/Tests-114%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="114 Pytest Passed">
+  <img src="https://img.shields.io/badge/Tests-120%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white" alt="120 Pytest Passed">
 </p>
 
 <p align="center">
@@ -45,6 +54,7 @@
     - [8. 💬 Arquitectura Dual de Notificaciones y Telemetría](#8--arquitectura-dual-de-notificaciones-y-telemetría)
     - [9. 🎲 Simulador Virtual Integrado y Generador de Firmware](#9--simulador-virtual-integrado-y-generador-de-firmware)
     - [10. 🔒 Bitácora Cifrada e Inmutable de Auditoría Forense](#10--bitácora-cifrada-e-inmutable-de-auditoría-forense)
+    - [11. 🌍 Internacionalización Multilingüe (Español, Inglés, Francés y Portugués)](#11--internacionalización-multilingüe-español-inglés-francés-y-portugués)
   - [🧪 Pruebas Técnicas, Concurrencia y Benchmarks de Estrés](#-pruebas-técnicas-concurrencia-y-benchmarks-de-estrés)
   - [📡 Referencia de la API REST / IoT](#-referencia-de-la-api-rest--iot)
   - [🚀 Despliegue en Producción & Operaciones](#-despliegue-en-producción--operaciones)
@@ -336,6 +346,20 @@ Ubicado en [`services/bitacora.py`](services/bitacora.py):
   * Visualización descifrada en vivo con filtrado por categoría (`SISTEMA`, `IOT`, `AGRONOMICO`, `NOTIFICACION`, `SEGURIDAD`).
   * Botón interactivo *"Auditar Cadena Criptográfica"* para validar en tiempo real la firma HMAC y los hashes encadenados.
   * Botón *"Descargar Archivo Cifrado (.enc)"* para custodia forense externa.
+
+---
+
+### 11. 🌍 Internacionalización Multilingüe (Español, Inglés, Francés y Portugués)
+
+Ubicado en [`services/i18n.py`](services/i18n.py) e integrado de extremo a extremo en la barra de navegación y el backend:
+* **4 Idiomas Soportados Nativamente**:
+  * 🇪🇸 **Español (`es`)** — Idioma predeterminado ([`README.md`](README.md)).
+  * 🇺🇸 **English (`en`)** — Soporte completo en interfaz, API y documentación ([`README.en.md`](README.en.md)).
+  * 🇫🇷 **Français (`fr`)** — Soporte completo en interfaz, API y documentación ([`README.fr.md`](README.fr.md)).
+  * 🇧🇷 **Português (`pt`)** — Soporte completo en interfaz, API y documentación ([`README.pt.md`](README.pt.md)).
+* **Selector Interactivo en la Barra Superior**: Permite cambiar el idioma en 1 clic desde cualquier vista (`/idioma/<codigo>` o `?lang=<codigo>`), persistiendo la preferencia en la sesión de usuario y en una cookie HTTP (`hydro_lang`) de larga duración.
+* **Autodetección por Cabecera `Accept-Language`**: Si el usuario accede por primera vez, el sistema negocia automáticamente entre `es`, `en`, `fr` y `pt` según el idioma del navegador.
+* **API REST de Localización (`/api/i18n/<lang>`)**: Expone los catálogos de traducción JSON para clientes externos, paneles móviles y traducción dinámica del DOM.
 
 ---
 

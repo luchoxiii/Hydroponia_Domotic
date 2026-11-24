@@ -65,7 +65,8 @@ def guardar_config_notificaciones(datos):
 
     # Sincronizar automáticamente con telegram_config.json para interoperabilidad total
     try:
-        ruta_tg = os.path.join(BASEDIR, 'data', 'telegram_config.json')
+        from services import telegram_bot
+        ruta_tg = telegram_bot._ruta_config()
         if config['telegram_token'] and config['telegram_chat_id']:
             with open(ruta_tg, 'w', encoding='utf-8') as f_tg:
                 json.dump({

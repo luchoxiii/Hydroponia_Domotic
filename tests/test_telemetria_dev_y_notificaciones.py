@@ -27,8 +27,9 @@ from services import telemetria_dev, notificaciones_usuario
 
 # ==================== TESTS TELEMETRÍA DESARROLLADOR ====================
 
-def test_obtener_id_instancia():
+def test_obtener_id_instancia(tmp_path, monkeypatch):
     """Verifica que se genera y persiste un ID único de instancia con datos del sistema."""
+    monkeypatch.setattr('services.telemetria_dev._ruta_instancia', lambda: str(tmp_path / "inst.json"))
     instancia = telemetria_dev.obtener_id_instancia()
     assert 'instance_id' in instancia
     assert len(instancia['instance_id']) >= 6
@@ -37,8 +38,9 @@ def test_obtener_id_instancia():
     assert 'fecha_instalacion' in instancia
 
 
-def test_registrar_arranque():
+def test_registrar_arranque(tmp_path, monkeypatch):
     """Verifica el incremento del contador de arranques del sistema."""
+    monkeypatch.setattr('services.telemetria_dev._ruta_instancia', lambda: str(tmp_path / "inst.json"))
     antes = telemetria_dev.obtener_id_instancia().get('total_arranques', 0)
     despues = telemetria_dev.registrar_arranque()
     assert despues['total_arranques'] >= antes + 1
@@ -48,7 +50,7 @@ def test_registrar_arranque():
 def test_recolectar_metricas_consumo(app, cultivo_planta):
     """Verifica que se miden los consumos del sistema (cultivos, lecturas, BD)."""
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         lectura = LecturaSensor(cultivo_id=cultivo.id, tipo='PH', valor=6.0)
         db.session.add(lectura)
         db.session.commit()
@@ -113,8 +115,10 @@ def test_notificar_alta_dev_mock(mock_post, app):
 
 # ==================== TESTS NOTIFICACIONES DE USUARIO ====================
 
-def test_guardar_y_obtener_config_usuario():
+def test_guardar_y_obtener_config_usuario(tmp_path, monkeypatch):
     """Verifica guardar y recuperar la configuración de notificaciones del usuario."""
+    monkeypatch.setattr('services.notificaciones_usuario._ruta_config', lambda: str(tmp_path / "notif.json"))
+    monkeypatch.setattr('services.telegram_bot._ruta_config', lambda: str(tmp_path / "tg.json"))
     datos = {
         'discord_activo': True,
         'discord_webhook_url': 'https://discord.com/api/webhooks/123/abc',
@@ -200,7 +204,7 @@ def test_enviar_y_probar_telegram_usuario(mock_post):
 def test_despachar_alerta_a_canales_usuario(mock_tg, mock_dc, app, cultivo_planta):
     """Verifica que una alerta se despacha tanto a Discord como a Telegram según configuración."""
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         # Configurar ambos canales activos
         notificaciones_usuario.guardar_config_notificaciones({
             'discord_activo': True,
@@ -241,7 +245,7 @@ def test_despachar_alerta_a_canales_usuario(mock_tg, mock_dc, app, cultivo_plant
 def test_despachar_alta_cultivo(mock_tg, mock_dc, app, cultivo_planta):
     """Verifica despacho de aviso ante alta de cultivo."""
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         notificaciones_usuario.guardar_config_notificaciones({
             'discord_activo': True,
             'discord_webhook_url': 'https://discord.com/api/webhooks/test/url',
@@ -264,7 +268,7 @@ def test_despachar_alta_cultivo(mock_tg, mock_dc, app, cultivo_planta):
 def test_despachar_alta_dispositivo(mock_tg, mock_dc, app, cultivo_planta):
     """Verifica despacho de aviso ante alta de nuevo dispositivo IoT."""
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         notificaciones_usuario.guardar_config_notificaciones({
             'discord_activo': True,
             'discord_webhook_url': 'https://discord.com/api/webhooks/test/url',

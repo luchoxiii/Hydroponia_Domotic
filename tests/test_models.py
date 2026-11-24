@@ -36,7 +36,7 @@ def test_modelo_especie_to_dict(app):
 def test_modelo_cultivo_progreso_y_dias(app, cultivo_planta):
     """Verifica el cálculo de días activo y progreso de un cultivo."""
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         assert cultivo.dias_activo == 10
         assert cultivo.estado == 'ACTIVO'
         # Lechuga ciclo ~45 días, 10/45 * 100 ~ 22%

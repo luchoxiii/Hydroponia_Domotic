@@ -202,18 +202,22 @@ def entrenar_modelo(guardar=True):
 
 
 def cargar_modelo():
-    """Carga el modelo persistido en memoria (cache) o lo entrena si no existe."""
+    """Carga el modelo persistido en memoria (cache) o lo entrena si no existe o es incompatible."""
     global _MODELO_CACHE
     if _MODELO_CACHE is not None:
         return _MODELO_CACHE
 
     if os.path.exists(MODELO_PATH):
         try:
-            _MODELO_CACHE = joblib.load(MODELO_PATH)
-            return _MODELO_CACHE
+            cargado = joblib.load(MODELO_PATH)
+            pipe = cargado['pipeline'] if isinstance(cargado, dict) else cargado
+            # Validar que el modelo cargado funciona con la versión actual de scikit-learn
+            if hasattr(pipe, 'predict_proba'):
+                _MODELO_CACHE = cargado
+                return _MODELO_CACHE
         except Exception:
             pass
-    _MODELO_CACHE = entrenar_modelo(guardar=True)
+    entrenar_modelo(guardar=True)
     return _MODELO_CACHE
 
 

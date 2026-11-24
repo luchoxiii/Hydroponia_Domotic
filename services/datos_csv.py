@@ -18,7 +18,7 @@ def exportar_cultivo_csv(cultivo_id):
     Exporta todas las lecturas históricas de un cultivo a un archivo CSV en memoria.
     Incluye especie, parámetros ideales de referencia y clima exterior actual.
     """
-    cultivo = Cultivo.query.get_or_404(cultivo_id)
+    cultivo = db.get_or_404(Cultivo, cultivo_id)
     esp = cultivo.especie
     clima = obtener_clima_actual()
 
@@ -91,7 +91,7 @@ def importar_lecturas_csv(cultivo_id, stream_o_contenido):
       1. Formato Ancho (columnas: timestamp, ph, ec, temperatura, humedad, nivel_agua, luz)
       2. Formato Largo (columnas: timestamp, tipo/sensor, valor, unidad)
     """
-    cultivo = Cultivo.query.get_or_404(cultivo_id)
+    cultivo = db.get_or_404(Cultivo, cultivo_id)
     esp = cultivo.especie
 
     if isinstance(stream_o_contenido, bytes):

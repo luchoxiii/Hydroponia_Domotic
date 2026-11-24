@@ -4,7 +4,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 import shutil
 from datetime import datetime, date, timezone
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response
+from urllib.parse import urlparse
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, Response, session
 
 from config import Config, obtener_config
 from models import db
@@ -15,7 +16,7 @@ from models.alerta import Alerta
 from models.dispositivo import Dispositivo
 from services import (
     catalogo, alertas, monitoreo, dispositivos, clima, ml_engine,
-    datos_csv, telegram_bot, telemetria_dev, notificaciones_usuario, bitacora
+    datos_csv, telegram_bot, telemetria_dev, notificaciones_usuario, bitacora, i18n
 )
 
 
@@ -86,13 +87,73 @@ def crear_app(config_class=None):
         except Exception:
             pass
     
-    # Context processor para alertas en navbar
+    # Context processor para alertas e internacionalización (i18n: ES, EN, FR, PT) en navbar y vistas
+    @app.before_request
+    def detectar_idioma_request():
+        lang_param = request.args.get('lang')
+        if lang_param and lang_param.lower() in i18n.IDIOMAS_SOPORTADOS:
+            session['lang'] = i18n.validar_idioma(lang_param)
+
+    def obtener_idioma_actual():
+        lang = (
+            request.args.get('lang')
+            or session.get('lang')
+            or request.cookies.get('hydro_lang')
+        )
+        if not lang:
+            best = request.accept_languages.best_match(list(i18n.IDIOMAS_SOPORTADOS.keys()))
+            lang = best or i18n.IDIOMA_DEFAULT
+        return i18n.validar_idioma(lang)
+
     @app.context_processor
-    def inject_alertas():
+    def inject_alertas_e_i18n():
+        lang = obtener_idioma_actual()
         try:
-            return {'alertas_count': alertas.contar_alertas_no_leidas()}
+            count = alertas.contar_alertas_no_leidas()
         except Exception:
-            return {'alertas_count': 0}
+            count = 0
+        return {
+            'alertas_count': count,
+            'current_lang': lang,
+            'current_lang_info': i18n.IDIOMAS_SOPORTADOS.get(lang, i18n.IDIOMAS_SOPORTADOS['es']),
+            'idiomas_disponibles': i18n.IDIOMAS_SOPORTADOS,
+            'i18n_dom_map': i18n.obtener_mapa_dom(lang),
+            '_t': lambda clave, default=None: i18n.traducir(clave, idioma=lang, default=default)
+        }
+
+    def _url_redireccion_segura(destino, default_endpoint='dashboard'):
+        """Previene vulnerabilidades de Open Redirect validando que el destino sea relativo al servidor."""
+        if not destino:
+            return url_for(default_endpoint)
+        parsed = urlparse(destino)
+        if parsed.netloc and parsed.netloc != request.host:
+            return url_for(default_endpoint)
+        return destino
+
+    @app.route('/idioma/<lang_code>')
+    @app.route('/set-language/<lang_code>')
+    def cambiar_idioma(lang_code):
+        """Cambia el idioma activo de la interfaz (es, en, fr, pt) y lo persiste en sesión y cookie."""
+        lang = i18n.validar_idioma(lang_code)
+        session['lang'] = lang
+        candidato = request.args.get('next') or request.referrer
+        destino = _url_redireccion_segura(candidato, default_endpoint='dashboard')
+        resp = redirect(destino)
+        resp.set_cookie('hydro_lang', lang, max_age=365 * 24 * 3600, samesite='Lax')
+        return resp
+
+    @app.route('/api/i18n')
+    @app.route('/api/i18n/<lang_code>')
+    def api_i18n_catalogo(lang_code=None):
+        """Devuelve el catálogo de traducciones JSON para el idioma especificado o actual."""
+        lang = i18n.validar_idioma(lang_code or obtener_idioma_actual())
+        return jsonify({
+            'idioma': lang,
+            'info': i18n.IDIOMAS_SOPORTADOS[lang],
+            'idiomas_soportados': list(i18n.IDIOMAS_SOPORTADOS.keys()),
+            'traducciones': i18n.TRADUCCIONES.get(lang, {}),
+            'dom_map': i18n.obtener_mapa_dom(lang)
+        })
     
     # ==================== RUTAS PRINCIPALES ====================
     
@@ -227,7 +288,7 @@ def crear_app(config_class=None):
     @app.route('/cultivos/<int:cultivo_id>')
     def cultivo_detalle(cultivo_id):
         """Dashboard individual de un cultivo con lecturas, alertas, clima y Machine Learning."""
-        cultivo = Cultivo.query.get_or_404(cultivo_id)
+        cultivo = db.get_or_404(Cultivo, cultivo_id)
         resumen = monitoreo.obtener_resumen_cultivo(cultivo_id)
         lecturas_recientes = LecturaSensor.query.filter_by(
             cultivo_id=cultivo_id
@@ -260,9 +321,10 @@ def crear_app(config_class=None):
                                analisis_clima=analisis_clima)
 
     @app.route('/cultivos/<int:cultivo_id>/exportar.csv')
+    @app.route('/cultivos/<int:cultivo_id>/exportar-csv')
     def cultivo_exportar_csv(cultivo_id):
         """Descarga el historial de lecturas y clima del cultivo en formato CSV."""
-        cultivo = Cultivo.query.get_or_404(cultivo_id)
+        cultivo = db.get_or_404(Cultivo, cultivo_id)
         csv_data = datos_csv.exportar_cultivo_csv(cultivo_id)
         nombre_archivo = f"cultivo_{cultivo_id}_{cultivo.nombre.replace(' ', '_')}.csv"
         return Response(
@@ -358,8 +420,11 @@ def crear_app(config_class=None):
     @app.route('/cultivos/<int:cultivo_id>/estado', methods=['POST'])
     def cambiar_estado_cultivo(cultivo_id):
         """Cambia el estado de un cultivo."""
-        cultivo = Cultivo.query.get_or_404(cultivo_id)
-        nuevo_estado = request.form['estado']
+        cultivo = db.get_or_404(Cultivo, cultivo_id)
+        nuevo_estado = (request.form.get('estado') or '').strip().upper()
+        if nuevo_estado not in ('ACTIVO', 'PAUSADO', 'COSECHADO', 'ELIMINADO'):
+            flash('Estado de cultivo inválido.', 'danger')
+            return redirect(url_for('cultivo_detalle', cultivo_id=cultivo_id))
         cultivo.estado = nuevo_estado
         db.session.commit()
         try:
@@ -402,7 +467,7 @@ def crear_app(config_class=None):
             bitacora.registrar_evento('ALERTA_LEIDA', 'AGRONOMICO', {'alerta_id': alerta_id})
         except Exception:
             pass
-        return redirect(request.referrer or url_for('alertas_lista'))
+        return redirect(_url_redireccion_segura(request.referrer, default_endpoint='alertas_lista'))
     
     @app.route('/alertas/leer-todas', methods=['POST'])
     def alertas_marcar_todas_leidas():
@@ -554,14 +619,17 @@ def crear_app(config_class=None):
     def api_lecturas(cultivo_id):
         """Lecturas de un cultivo en formato JSON para gráficos."""
         tipo = request.args.get('tipo')
-        horas = int(request.args.get('horas', 24))
+        try:
+            horas = max(1, min(8760, int(request.args.get('horas', 24))))
+        except (ValueError, TypeError):
+            horas = 24
         lecturas = monitoreo.obtener_lecturas(cultivo_id, tipo=tipo, horas=horas)
         return jsonify([l.to_dict() for l in lecturas])
     
     @app.route('/api/cultivo/<int:cultivo_id>/diagnostico-ml')
     def api_diagnostico_ml(cultivo_id):
         """Endpoint JSON con la evaluación predictiva de ML y análisis agroclimático."""
-        cultivo = Cultivo.query.get_or_404(cultivo_id)
+        cultivo = db.get_or_404(Cultivo, cultivo_id)
         resumen = monitoreo.obtener_resumen_cultivo(cultivo_id)
         clima_actual = clima.obtener_clima_actual()
         eval_ml = ml_engine.evaluar_salud_cultivo(cultivo, resumen, clima_actual)
@@ -675,7 +743,7 @@ def crear_app(config_class=None):
                 flash(f'🧪 [Simulador] Telemetría virtual enviada exitosamente (pH {payload["ph"]}, Temp {payload["temperatura"]}°C, EC {payload["ec"]}).', 'success')
         else:
             flash(f'Error al simular telemetría: {resultado.get("error")}', 'danger')
-        return redirect(request.referrer or url_for('dispositivos_lista'))
+        return redirect(_url_redireccion_segura(request.referrer, default_endpoint='dispositivos_lista'))
 
     # ==================== INTELIGENCIA ARTIFICIAL & ML ====================
 

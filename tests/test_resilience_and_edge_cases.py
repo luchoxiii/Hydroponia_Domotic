@@ -45,18 +45,31 @@ def test_telegram_dev_falla_servidor_500(app):
         mock_resp = MagicMock()
         mock_resp.status_code = 500
         mock_resp.text = "Internal Server Error"
-        with patch('requests.post', return_value=mock_resp):
-            res = telemetria_dev.notificar_instalacion_arranque()
-            assert res['ok'] is False
+        with patch.object(app, 'config', {
+            **app.config,
+            'DEV_TELEGRAM_BOT_TOKEN': 'test_token_dev',
+            'DEV_TELEGRAM_CHAT_ID': '123456',
+            'DEV_TELEMETRIA_ACTIVA': True
+        }):
+            with patch('requests.post', return_value=mock_resp):
+                res = telemetria_dev.notificar_instalacion_arranque()
+                assert res['ok'] is False
+                assert res.get('status') == 500
 
 
 def test_telegram_dev_excepcion_red(app):
     """Verifica que una excepción de socket en Telegram se captura de forma segura."""
     with app.app_context():
-        with patch('requests.post', side_effect=requests.exceptions.ConnectionError("Socket closed")):
-            res = telemetria_dev.notificar_alta_dev("Cultivo", "Test")
-            assert res['ok'] is False
-            assert 'error' in res
+        with patch.object(app, 'config', {
+            **app.config,
+            'DEV_TELEGRAM_BOT_TOKEN': 'test_token_dev',
+            'DEV_TELEGRAM_CHAT_ID': '123456',
+            'DEV_TELEMETRIA_ACTIVA': True
+        }):
+            with patch('requests.post', side_effect=requests.exceptions.ConnectionError("Socket closed")):
+                res = telemetria_dev.notificar_alta_dev("Cultivo", "Test")
+                assert res['ok'] is False
+                assert 'error' in res
 
 
 def test_discord_webhook_error_http(app):
@@ -222,3 +235,43 @@ def test_ml_cache_ram_consistencia(app, cultivo_planta):
         
         assert diag1['diagnostico_codigo'] == diag2['diagnostico_codigo']
         assert diag1['score_salud'] == diag2['score_salud']
+
+
+# ==================== 5. SEGURIDAD & INTEGRIDAD REFERENCIAL ====================
+
+def test_prevencion_open_redirect_en_idioma(client):
+    """Verifica que /idioma/<lang> rechaza redirecciones a dominios externos maliciosos."""
+    res = client.get('/idioma/en?next=https://sitio-malicioso.com/phishing', follow_redirects=False)
+    assert res.status_code in (301, 302)
+    assert 'sitio-malicioso.com' not in res.headers.get('Location', '')
+
+
+def test_api_lecturas_parametro_horas_invalido(client, cultivo_planta):
+    """Verifica que un parámetro 'horas' no numérico en /api/cultivo/<id>/lecturas no arroje HTTP 500."""
+    res = client.get(f'/api/cultivo/{cultivo_planta}/lecturas?horas=no_numerico')
+    assert res.status_code == 200
+    assert isinstance(res.get_json(), list)
+
+
+def test_proteccion_eliminar_especie_con_cultivo_activo(app, cultivo_planta):
+    """Impide eliminar una especie del catálogo si tiene cultivos asociados."""
+    from services import catalogo
+    with app.app_context():
+        cultivo = db.session.get(Cultivo, cultivo_planta)
+        esp_id = cultivo.especie_id
+        with pytest.raises(ValueError):
+            catalogo.eliminar_especie(esp_id)
+
+
+def test_escapado_seguro_firmware_esp32(app, cultivo_planta):
+    """Verifica que caracteres especiales como comillas en Wi-Fi SSID/password se escapen en el código C++."""
+    from services import dispositivos
+    with app.app_context():
+        disp = dispositivos.crear_dispositivo('Nodo "Especial"', 'ESP32', cultivo_planta)
+        codigo = dispositivos.generar_firmware_esp32(
+            disp,
+            wifi_ssid='MiRed"ConComillas',
+            wifi_pass='Pass\\ConBarra"YComilla'
+        )
+        assert 'MiRed\\"ConComillas' in codigo
+        assert 'Pass\\\\ConBarra\\"YComilla' in codigo

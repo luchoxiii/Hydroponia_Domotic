@@ -18,7 +18,7 @@ def listar_dispositivos():
 
 def obtener_dispositivo(dispositivo_id):
     """Obtiene un dispositivo por su ID."""
-    return Dispositivo.query.get(dispositivo_id)
+    return db.session.get(Dispositivo, dispositivo_id)
 
 
 def obtener_por_api_key(api_key):
@@ -46,7 +46,7 @@ def crear_dispositivo(nombre, tipo_hardware='ESP32', cultivo_id=None, ubicacion=
 
 def eliminar_dispositivo(dispositivo_id):
     """Elimina un dispositivo."""
-    disp = Dispositivo.query.get(dispositivo_id)
+    disp = db.session.get(Dispositivo, dispositivo_id)
     if disp:
         db.session.delete(disp)
         db.session.commit()
@@ -56,7 +56,7 @@ def eliminar_dispositivo(dispositivo_id):
 
 def regenerar_api_key(dispositivo_id):
     """Regenera la API key de un dispositivo."""
-    disp = Dispositivo.query.get_or_404(dispositivo_id)
+    disp = db.get_or_404(Dispositivo, dispositivo_id)
     disp.api_key = Dispositivo.generar_api_key()
     db.session.commit()
     return disp
@@ -106,7 +106,7 @@ def procesar_telemetria(datos, ip_origen=None):
     if not cultivo_id:
         return {'error': 'No se especificó cultivo_id y el dispositivo no tiene cultivo pre-asignado'}, 400
 
-    cultivo = Cultivo.query.get(cultivo_id)
+    cultivo = db.session.get(Cultivo, cultivo_id)
     if not cultivo:
         return {'error': f'Cultivo ID {cultivo_id} no encontrado'}, 404
 
@@ -165,33 +165,34 @@ def procesar_telemetria(datos, ip_origen=None):
     alertas_objs = []
     lecturas_creadas = []
 
-    for tipo, valor, unidad in lecturas_a_guardar:
-        try:
-            lectura = LecturaSensor(
-                cultivo_id=cultivo_id,
-                tipo=tipo.upper(),
-                valor=float(valor),
-                unidad=unidad
-            )
-            db.session.add(lectura)
-            lecturas_creadas.append(lectura)
+    with _TELEMETRIA_LOCK:
+        for tipo, valor, unidad in lecturas_a_guardar:
+            try:
+                lectura = LecturaSensor(
+                    cultivo_id=cultivo_id,
+                    tipo=tipo.upper(),
+                    valor=float(valor),
+                    unidad=unidad
+                )
+                db.session.add(lectura)
+                lecturas_creadas.append(lectura)
 
-            if cultivo.especie:
-                from services.alertas import verificar_lectura
-                a_gen = verificar_lectura(lectura, cultivo.especie, auto_commit=False)
-                alertas_objs.extend(a_gen)
-                for a in a_gen:
-                    alertas_totales.append({
-                        'id': getattr(a, 'id', None),
-                        'tipo': a.tipo,
-                        'nivel': a.nivel,
-                        'mensaje': a.mensaje
-                    })
-        except Exception as e:
-            db.session.rollback()
-            return {'error': f'Error al registrar lectura de {tipo}: {str(e)}'}, 500
+                if cultivo.especie:
+                    from services.alertas import verificar_lectura
+                    a_gen = verificar_lectura(lectura, cultivo.especie, auto_commit=False)
+                    alertas_objs.extend(a_gen)
+                    for a in a_gen:
+                        alertas_totales.append({
+                            'id': getattr(a, 'id', None),
+                            'tipo': a.tipo,
+                            'nivel': a.nivel,
+                            'mensaje': a.mensaje
+                        })
+            except Exception as e:
+                db.session.rollback()
+                return {'error': f'Error al registrar lectura de {tipo}: {str(e)}'}, 500
 
-    db.session.commit()
+        db.session.commit()
 
     # Despachar notificaciones tras confirmar el commit
     if alertas_objs:
@@ -230,12 +231,29 @@ def procesar_telemetria(datos, ip_origen=None):
     }, 200
 
 
+def _escapar_c_string(texto):
+    """Escapa caracteres especiales para literales de cadena C++ seguros."""
+    if texto is None:
+        return ""
+    return (
+        str(texto)
+        .replace("\\", "\\\\")
+        .replace('"', '\\"')
+        .replace("\r", "")
+        .replace("\n", "\\n")
+    )
+
+
 def generar_firmware_esp32(dispositivo, host_url='http://localhost:5000', wifi_ssid='MI_WIFI_RED', wifi_pass='PASSWORD_WIFI'):
     """
     Genera el código C++ (.ino) completo para ESP32 / ESP8266 con las credenciales
     y API Key del dispositivo ya inyectadas para flasheo directo en 1 clic.
     """
-    endpoint = f"{host_url.rstrip('/')}/api/v1/telemetria"
+    endpoint = _escapar_c_string(f"{host_url.rstrip('/')}/api/v1/telemetria")
+    ssid_safe = _escapar_c_string(wifi_ssid)
+    pass_safe = _escapar_c_string(wifi_pass)
+    key_safe = _escapar_c_string(dispositivo.api_key)
+    nombre_safe = _escapar_c_string(dispositivo.nombre)
     cultivo_info = f"Cultivo ID: {dispositivo.cultivo_id} ({dispositivo.cultivo.nombre})" if (dispositivo.cultivo) else "Cultivo: Asignación dinámica en servidor"
 
     return f"""/*
@@ -255,12 +273,12 @@ def generar_firmware_esp32(dispositivo, host_url='http://localhost:5000', wifi_s
 #include <HTTPClient.h>
 
 // Credenciales WiFi pre-rellenadas
-const char* ssid = "{wifi_ssid}";
-const char* password = "{wifi_pass}";
+const char* ssid = "{ssid_safe}";
+const char* password = "{pass_safe}";
 
 // Endpoint y Clave de Autenticación de HydroControl
 const char* serverUrl = "{endpoint}";
-const char* apiKey = "{dispositivo.api_key}";
+const char* apiKey = "{key_safe}";
 
 // Pines de Sensores (Ajusta según tu conexión física)
 const int PIN_SENSOR_PH = 34;      // Entrada analógica pH
@@ -271,7 +289,7 @@ const int INTERVALO_ENVIO_MS = 30000; // Enviar telemetría cada 30 segundos
 void setup() {{
   Serial.begin(115200);
   delay(1000);
-  Serial.println("\\nIniciando {dispositivo.nombre} - HydroControl...");
+  Serial.println("\\nIniciando {nombre_safe} - HydroControl...");
 
   WiFi.begin(ssid, password);
   Serial.print("Conectando a red WiFi ");
@@ -372,7 +390,7 @@ def simular_envio_telemetria(dispositivo_id=None, cultivo_id=None, modo='normal'
         cultivo = Cultivo.query.filter_by(estado='ACTIVO').first()
         target_cultivo_id = cultivo.id if cultivo else 1
 
-    cultivo = Cultivo.query.get(target_cultivo_id)
+    cultivo = db.session.get(Cultivo, target_cultivo_id)
     esp = cultivo.especie if cultivo else None
 
     # Generar lecturas coherentes con la especie

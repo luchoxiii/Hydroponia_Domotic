@@ -1,6 +1,7 @@
 """Pruebas para el servicio y vistas de Telegram (Telemetría y Alertas)."""
 import json
 from unittest.mock import patch, MagicMock
+from models import db
 from models.alerta import Alerta
 from models.cultivo import Cultivo
 from services import telegram_bot
@@ -61,7 +62,7 @@ def test_notificar_alerta_telegram(app, cultivo_planta):
     mock_resp.json.return_value = {'ok': True, 'result': {'message_id': 101}}
 
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         alerta = Alerta(
             cultivo_id=cultivo.id,
             tipo='PH_BAJO',
@@ -196,7 +197,7 @@ def test_notificar_altas_telegram(app, cultivo_planta):
     mock_resp.json.return_value = {'ok': True, 'result': {'message_id': 77}}
 
     with app.app_context():
-        cultivo = Cultivo.query.get(cultivo_planta)
+        cultivo = db.session.get(Cultivo, cultivo_planta)
         cfg_mock = {'bot_token': 'fake_token', 'chat_id': '987654', 'notificaciones_activas': True}
 
         with patch.object(telegram_bot, 'obtener_config_telegram', return_value=cfg_mock):

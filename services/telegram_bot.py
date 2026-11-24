@@ -80,7 +80,8 @@ def guardar_config_telegram(bot_token, chat_id, notificaciones_activas=True):
 
     # Sincronizar automáticamente con data/notificaciones_usuario.json para Bot 2
     try:
-        ruta_u = os.path.join(BASEDIR, 'data', 'notificaciones_usuario.json')
+        from services import notificaciones_usuario
+        ruta_u = notificaciones_usuario._ruta_config()
         datos_u = {}
         if os.path.exists(ruta_u):
             with open(ruta_u, 'r', encoding='utf-8') as f_u:
@@ -277,10 +278,11 @@ def enviar_reporte_telemetria_telegram(cultivo_id):
     Genera y envía por Telegram un reporte completo de telemetría, microclima
     y diagnóstico de Machine Learning para un cultivo específico.
     """
+    from models import db
     from models.cultivo import Cultivo
     from services import monitoreo, clima, ml_engine
 
-    cultivo = Cultivo.query.get(cultivo_id)
+    cultivo = db.session.get(Cultivo, cultivo_id)
     if not cultivo:
         return {'ok': False, 'error': f'Cultivo ID {cultivo_id} no encontrado'}
 
@@ -313,7 +315,7 @@ def enviar_reporte_telemetria_telegram(cultivo_id):
     # Clima exterior
     t_ext = clima_actual.get('temp_externa', 'N/D')
     h_ext = clima_actual.get('humedad_externa', 'N/D')
-    clima_desc = clima_actual.get('descripcion', '')
+    clima_desc = clima_actual.get('condicion') or clima_actual.get('descripcion', '')
     d_temp = diagnostico_ml.get('delta_temp', 0)
     d_signo = f"+{d_temp}" if d_temp > 0 else f"{d_temp}"
 
@@ -360,7 +362,7 @@ def enviar_reporte_general_telegram():
         f"🌿 <b>Cultivos Activos:</b> {stats.get('total_cultivos', 0)}\n"
         f"⚠️ <b>Alertas Pendientes:</b> {stats.get('total_alertas', 0)} (🚨 Críticas: {stats.get('alertas_criticas', 0)})\n\n"
         f"📋 <b>Mis Cultivos:</b>\n{texto_cultivos}\n\n"
-        f"🌦️ <b>Clima Exterior:</b> {clima_actual.get('temp_externa', 'N/D')}°C | {clima_actual.get('humedad_externa', 'N/D')}% ({clima_actual.get('descripcion', '')})\n"
+        f"🌦️ <b>Clima Exterior:</b> {clima_actual.get('temp_externa', 'N/D')}°C | {clima_actual.get('humedad_externa', 'N/D')}% ({clima_actual.get('condicion') or clima_actual.get('descripcion', '')})\n"
         f"🕒 <i>{ahora}</i>\n\n"
         "💡 <i>Usa /telemetria &lt;id&gt; para ver detalles de un cultivo específico.</i>"
     )
@@ -435,8 +437,8 @@ def procesar_comando_telegram(texto_comando, chat_id_remitente):
         t = c.get('temp_externa', 'N/D')
         h = c.get('humedad_externa', 'N/D')
         v = c.get('viento_kmh', 'N/D')
-        d = c.get('descripcion', 'N/D')
-        consejo = c.get('consejo_agronomico', '')
+        d = c.get('condicion') or c.get('descripcion', 'N/D')
+        consejo = c.get('consejo_agronomico', 'Mantener monitoreo del diferencial térmico interior/exterior.')
 
         mensaje = (
             "🌦️ <b>CLIMA EXTERIOR EN TIEMPO REAL</b>\n\n"

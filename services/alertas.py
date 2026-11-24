@@ -181,7 +181,7 @@ def contar_alertas_no_leidas():
 
 def marcar_como_leida(alerta_id):
     """Marca una alerta como leída."""
-    alerta = Alerta.query.get(alerta_id)
+    alerta = db.session.get(Alerta, alerta_id)
     if alerta:
         alerta.leida = True
         db.session.commit()

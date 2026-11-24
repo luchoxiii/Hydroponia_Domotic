@@ -226,12 +226,12 @@ def test_eliminar_cultivo_cascada(client, app, cultivo_planta):
 
     with app.app_context():
         # Verificar que el cultivo ya no existe
-        assert Cultivo.query.get(cultivo_planta) is None
+        assert db.session.get(Cultivo, cultivo_planta) is None
         # Verificar que lecturas y alertas fueron eliminadas
         assert LecturaSensor.query.filter_by(cultivo_id=cultivo_planta).count() == 0
         assert Alerta.query.filter_by(cultivo_id=cultivo_planta).count() == 0
         # Verificar que el dispositivo se conservó pero se desvinculó (cultivo_id es None)
-        disp_actualizado = Dispositivo.query.get(disp_id)
+        disp_actualizado = db.session.get(Dispositivo, disp_id)
         assert disp_actualizado is not None
         assert disp_actualizado.cultivo_id is None
 

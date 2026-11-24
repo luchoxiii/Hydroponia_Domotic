@@ -32,7 +32,14 @@ def app(tmp_path, monkeypatch):
     """Crea una instancia de la aplicación configurada para pruebas."""
     test_db_path = str(tmp_path / "test_hydro.db")
     test_bitacora = str(tmp_path / "bitacora_test.enc")
+    test_instancia = str(tmp_path / "instancia_dev_test.json")
+    test_notif_user = str(tmp_path / "notificaciones_usuario_test.json")
+    test_telegram_cfg = str(tmp_path / "telegram_config_test.json")
+
     monkeypatch.setattr('services.bitacora._ruta_bitacora', lambda: test_bitacora)
+    monkeypatch.setattr('services.telemetria_dev._ruta_instancia', lambda: test_instancia)
+    monkeypatch.setattr('services.notificaciones_usuario._ruta_config', lambda: test_notif_user)
+    monkeypatch.setattr('services.telegram_bot._ruta_config', lambda: test_telegram_cfg)
 
     class CustomTestConfig(TestConfig):
         SQLALCHEMY_DATABASE_URI = f'sqlite:///{test_db_path}'
